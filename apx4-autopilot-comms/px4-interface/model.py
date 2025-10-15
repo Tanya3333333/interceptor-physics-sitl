@@ -105,12 +105,8 @@ class SimplePluginModel():
 
 
     def encode(sensor_packing):
-        out_signal = 
-        return mavlinkbridgeSink(sensor_packing, heatbeat_bytes)
+        out_signal =  mavlinkbridgeSink(sensor_packing, heatbeat_bytes)
+        return out_signal
     
-
-
-
-
-
-        def input_to_autopilot(self, hil_imu, hil_gps, hil_obtical_flow, hil_rc_input_raw, hil_state_quaternion):
+    def input_to_autopilot(self, hil_imu, hil_gps, hil_obtical_flow, hil_rc_input_raw, hil_state_quaternion):
+        pass
