@@ -13,7 +13,6 @@ SHARED_LIB_PATH = 'libfdm.so' # Compiled C library name
 SIM_SYS_ID = 2 # Simulator MAVLink System ID
 SIM_COMP_ID = 222
 
-
 # --- FDM Structure from C to Python ---
 class FDM_Input(Structure):
     """Input struct for the C FDM."""
@@ -30,7 +29,6 @@ class FDM_Output(Structure):
         ("attitude_quaternion", c_float * 4), # w, x, y, z
         ("angular_velocity", c_float * 3), # P, Q, R
     ]
-
 
 # --- Model ---
 class PX4PluginModel():
