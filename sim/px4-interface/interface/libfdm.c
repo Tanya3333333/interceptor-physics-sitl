@@ -11,19 +11,27 @@ typedef struct {
 } FDM_Input;
 
 typedef struct {
+    
+    // - state quaternion -
     double position_ned[3];    // x, y, z (unit: meters)
     double velocity_ned[3];    // Vx, Vy, Vz (unit: m/s)
     float attitude_quaternion[4]; // w, x, y, z
     float angular_velocity[3];  // P, Q, R (unit: rad/s, body frame)
+
+    // - imu/sensor -
+    double acc[3];
+    double gyro[3];
+    double mag[3];
+
+    // - baro -
+    double pressure;
+    double lla[3];   // lat, lon, alt
+    
+    // - gps -
+    double gnd_speed;
+    double course_deg;
+
 } FDM_Output;
-
-/* --- Global FDM Data --- */
-// Get pointers to the model data structures defined in UAV_Dynamics.c
-// NOTE: These lines are crucial for connecting the wrapper to the generated code.
-//RT_MODEL_UAV_Dynamics_T *const UAV_Dynamics_M = UAV_Dynamics();
-//ExtU_UAV_Dynamics_T *UAV_Dynamics_U = UAV_Dynamics_M->ExternalInputs;
-//ExtY_UAV_Dynamics_T *UAV_Dynamics_Y = UAV_Dynamics_M->ExternalOutputs;
-
 
 // Entry points and globals
 extern void UAV_Dynamics_initialize(void);
@@ -35,6 +43,7 @@ extern ExtY_UAV_Dynamics_T UAV_Dynamics_Y;
 //calls the Simulink-generated init function
 void fdm_initialize(void) 
 {
+    printf ("[libfdm] fdm_initialize() called\n");
     // setting it to zero if its not already zero
     memset(&UAV_Dynamics_U, 0, sizeof(UAV_Dynamics_U));
     memset(&UAV_Dynamics_Y, 0, sizeof(UAV_Dynamics_Y));
@@ -42,9 +51,7 @@ void fdm_initialize(void)
     UAV_Dynamics_initialize();
 }
 
-
 // transfer simulink i/o (UAV_DYNAMICS_U/Y) to FDM_Input/Output)
-
 void fdm_step(const FDM_Input* in, FDM_Output* out)
 {
     // Inputs → model
@@ -76,4 +83,17 @@ void fdm_step(const FDM_Input* in, FDM_Output* out)
     out->position_ned[0] = 0.0;
     out->position_ned[1] = 0.0;
     out->position_ned[2] = 0.0;
+
+    // placeholders for all the sensors (imu, baro, gps)
+    for (int i = 0; i < 3; i++)
+    {
+        out->acc[i]  = UAV_Dynamics_Y.Acc[i];
+        out->gyro[i] = UAV_Dynamics_Y.Gyro[i];
+        out->mag[i]  = UAV_Dynamics_Y.Mag[i];
+        out->lla[i]  = UAV_Dynamics_Y.LLA[i];
+    }
+
+    out->pressure   = UAV_Dynamics_Y.Pressure;
+    out->gnd_speed  = UAV_Dynamics_Y.GndSpeed;
+    out->course_deg = UAV_Dynamics_Y.Course;
 }

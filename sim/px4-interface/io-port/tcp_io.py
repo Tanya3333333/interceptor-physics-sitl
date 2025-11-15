@@ -2,7 +2,7 @@ import socket, errno
 
 DEFAULT_TIMEOUT_MS = 1000 # TODO make a way to calculate appropriate timeout
 
-class Client:
+class Client: #simulator side
     def __init__(self, host, port, timeout_ms=DEFAULT_TIMEOUT_MS):
         self.host = host
         self.port = port

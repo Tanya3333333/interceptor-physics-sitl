@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV /home/tanya/Desktop/uav-sim/.venv
+set -gx VIRTUAL_ENV /home/tanya/Desktop/0101-UVicCfAR_SimulationTools/.venv
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH
