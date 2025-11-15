@@ -123,7 +123,45 @@ class TestPX4WaypointsMission(unittest.TestCase):
         
         self.assertIsNotNone(self.px4_plugin.master, "MAVLink connection not established")
         mission_waypoints_config(self.px4_plugin.master, wp1, wp2)
+
+
+
+    ----
     
+    def test_fdm_init_and_step(self):
+
+        # load model and shared lib
+        px4 = PX4PluginModel()
+        px4.setup_fdm()  
+
+        # set all motors to 20% throttle just for test
+        px4.fdm_input.motor_commands[:] = (0.2, 0.2, 0.2, 0.2)
+        px4.fdm_input.delta_time = px4.dt
+
+
+        t_end = time.time() + 1000  # Run for 1000 seconds to make sure QGC going to show "ready to fly" state
+        while time.time() < t_end:
+
+            # creates connection to QGC
+            px4.send_heartbeat()
+            msg = px4.recv_actuator_controls()
+
+            #effect FDM step
+            px4.fdm_lib.fdm_step(byref(px4.fdm_input),byref(px4.fdm_output))
+            
+            px4.send_hil_state_quaternion()
+            px4.send_hil_sensor()
+            px4.send_hil_gps()
+            time.sleep(px4.dt)
+
+
+        # Print the all the fdm output in the terminal
+        print("summery:",
+              px4.fdm_output)
+
+        # test passes if no crash
+        self.assertTrue(True)
+
 
 '''
 
