@@ -15,7 +15,7 @@ typedef struct {
     // - state quaternion -
     double position_ned[3];    // x, y, z (unit: meters)
     double velocity_ned[3];    // Vx, Vy, Vz (unit: m/s)
-    float attitude_quaternion[4]; // w, x, y, z
+    float attitude_quaternion[4]; // w, x, y, z -- in the fdm: q0-q1-q2-q3
     float angular_velocity[3];  // P, Q, R (unit: rad/s, body frame)
 
     // - imu/sensor -
@@ -65,7 +65,7 @@ void fdm_step(const FDM_Input* in, FDM_Output* out)
     // advance one tick
     UAV_Dynamics_step();
 
-    // Outputs ← model
+    // Outputs (check 6DOF block in simulink for finding the names of var)
     out->velocity_ned[0] = UAV_Dynamics_Y.Velocity[0];
     out->velocity_ned[1] = UAV_Dynamics_Y.Velocity[1];
     out->velocity_ned[2] = UAV_Dynamics_Y.Velocity[2];
@@ -74,15 +74,14 @@ void fdm_step(const FDM_Input* in, FDM_Output* out)
     out->angular_velocity[1] = (float)UAV_Dynamics_Y.Gyro[1];
     out->angular_velocity[2] = (float)UAV_Dynamics_Y.Gyro[2];
 
-    // placeholders (no attitude/NED pos in outputs yet)
-    out->attitude_quaternion[0] = 1.f;  // w
-    out->attitude_quaternion[1] = 0.f;  // x
-    out->attitude_quaternion[2] = 0.f;  // y
-    out->attitude_quaternion[3] = 0.f;  // z
+    out->attitude_quaternion[0] = UAV_Dynamics_Y.quat_raw[0];  // w
+    out->attitude_quaternion[1] = UAV_Dynamics_Y.quat_raw[1];  // x
+    out->attitude_quaternion[2] = UAV_Dynamics_Y.quat_raw[2];  // y
+    out->attitude_quaternion[3] = UAV_Dynamics_Y.quat_raw[3];  // z
 
-    out->position_ned[0] = 0.0;
-    out->position_ned[1] = 0.0;
-    out->position_ned[2] = 0.0;
+    out->position_ned[0] = UAV_Dynamics_Y.posi_raw[0];
+    out->position_ned[1] = UAV_Dynamics_Y.posi_raw[1];
+    out->position_ned[2] = UAV_Dynamics_Y.posi_raw[2];
 
     // placeholders for all the sensors (imu, baro, gps)
     for (int i = 0; i < 3; i++)

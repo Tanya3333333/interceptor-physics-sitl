@@ -108,29 +108,17 @@ class PX4PluginModel():
         fdm_input.delta_time = self.dt
         return fdm_input
     
-    
-    def send_hil_sensor(self):
-        self.master.mav.hil_sensor_send(
-            int(time.time() * 1e6), # timestamp (microseconds)
-            0, 0, 0,               # accelerometer (m/s^2)
-            0, 0, 0,               # gyroscope (rad/s)
-            0, 0, 0,               # magnetometer (gauss)
-            1013.25,               # absolute pressure (hPa)
-            0,                     # differential pressure (hPa)
-            20.0,                  # temperature (deg C)
-            0, 0, 0                # fields not used
-        )
-    
-    '''
+
     def send_hil_sensor(self):
         if not self.master:
             return
         
         self.master.mav.hil_sensor_send(
-            int(time.time() * 1e6),
-            float(self.fdm_output.acc[0]),
-            float(self.fdm_output.acc[1]),
-            float(self.fdm_output.acc[2]),
+            int(time.time()*1e6),
+
+            int((self.fdm_output.acc[0] / 9.80665) * 1000),
+            int((self.fdm_output.acc[1] / 9.80665) * 1000),
+            int((self.fdm_output.acc[2] / 9.80665) * 1000),
 
             float(self.fdm_output.gyro[0]),
             float(self.fdm_output.gyro[1]),
@@ -140,32 +128,46 @@ class PX4PluginModel():
             float(self.fdm_output.mag[1]),
             float(self.fdm_output.mag[2]),
 
-            float(self.fdm_output.pressure),  # absolute pressure
-            0.0,                              # differential pressure
-            20.0,                             # temp
-            0xFFFF                            # fields updated mask
+            float(self.fdm_output.pressure),   # dynamic baro (abs pressure)
+            0.0,                               # diff pressure
+            float(self.fdm_output.lla[2]),     # pressure alt
+            20.0,                              # temp
+            0xFFFF,                            # field update
+            0                                  # sensor id
         )
-    '''
+ 
 
     def send_hil_gps(self):
+        """
+        Used the pymav array structure to fill in the param: https://mavlink.io/en/messages/common.html 
+        id msg = 113
+        """
         if not self.master:
             return
 
-        now = int(time.time() * 1e6)
-
         self.master.mav.hil_gps_send(
-            now,                          # time_usec
-            3,                            # fix_type (3 = 3D GPS fix)
-            int(48.601569 * 1e7),         # lat (degE7)
-            int(-123.411646 * 1e7),       # lon (degE7)
-            int(100.0 * 1000),            # alt (mm)
-            50,                           # eph (cm)
-            50,                           # epv (cm)
-            0,                            # vel (cm/s)
-            0, 0, 0,                      # vn, ve, vd
-            0,                            # cog (cdeg)
-            10                            # satellites_visible
+            int(time.time()*1e6),                       # time_usec
+            
+            3,                                          # fix_type (3 = 3D GPS fix)
+            
+            int(self.fdm_output.lla[0] * 1e7),          #lat 
+            int(self.fdm_output.lla[1] * 1e7),          #lon
+            int(self.fdm_output.lla[2] * 1000),         # alt
+            
+            50,                                         # eph (cm)
+            50,                                         # epv (cm)
+            
+            int(abs(self.fdm_output.gnd_speed) * 100),  # vel (cm/s)
+            int(self.fdm_output.velocity_ned[0] * 100), #vn
+            int(self.fdm_output.velocity_ned[1] * 100), #ve
+            int(self.fdm_output.velocity_ned[2] * 100), #vd
+            
+            int(self.fdm_output.course_deg * 100),      # cog (cdeg)
+            10,                                         # satellites_visible
+            0,                                          # gps id
+            int(self.fdm_output.course_deg * 100),      # yaw = og
         )
+
 
     def send_hil_state_quaternion(self):
         """Converts FDM_Output to MAVLink HIL_STATE_QUATERNION and sends it.
@@ -175,9 +177,6 @@ class PX4PluginModel():
         if not self.master:
             return
 
-        # Timestamp (int64)
-        time_us = int(time.time() * 1e6)
-
         # Quaternion (ctypes → float → tuple)
         attitude_quat_xyzw = (
             float(self.fdm_output.attitude_quaternion[0]),  # w
@@ -186,110 +185,33 @@ class PX4PluginModel():
             float(self.fdm_output.attitude_quaternion[3])   # z
         )
 
-        # Angular velocity (rad/s)
-        rollspeed  = float(self.fdm_output.angular_velocity[0])
-        pitchspeed = float(self.fdm_output.angular_velocity[1])
-        yawspeed   = float(self.fdm_output.angular_velocity[2])
-
-        # GPS reference (lat/lon/alt must be ints)
-        LAT_REF = int(48.601569 * 1e7)     # degE7
-        LON_REF = int(-123.411646 * 1e7)   # degE7
-        ALT_REF = int(100.0 * 1000)        # mm (100 m AGL)
-
-        # Velocity: NED (m/s → cm/s → int)
-        vx_cm = int(self.fdm_output.velocity_ned[0] * 100)
-        vy_cm = int(self.fdm_output.velocity_ned[1] * 100)
-        vz_cm = int(self.fdm_output.velocity_ned[2] * 100)
-
-        # Airspeed (leave as zero)
-        ind_airspeed = 0
-        true_airspeed = 0
-
-        # Accelerations (must be integers)
-        xacc = 0
-        yacc = 0
-        zacc = 0
-
         # Send MAVLink message
         self.master.mav.hil_state_quaternion_send(
-            time_us,
+            int(time.time() * 1e6),
+
             attitude_quat_xyzw,
-            rollspeed,
-            pitchspeed,
-            yawspeed,
-            LAT_REF,
-            LON_REF,
-            ALT_REF,
-            vx_cm,
-            vy_cm,
-            vz_cm,
-            ind_airspeed,
-            true_airspeed,
-            xacc,
-            yacc,
-            zacc
+
+            # Angular velocity (rad/s)
+            float(self.fdm_output.angular_velocity[0]),             # roll
+            float(self.fdm_output.angular_velocity[1]),             # pitch
+            float(self.fdm_output.angular_velocity[2]),             # yaw
+
+            # GPS reference (lat/lon/alt must be ints)
+            int(self.fdm_output.lla[0] * 1e7),                      #lat 
+            int(self.fdm_output.lla[1] * 1e7),                      #lon
+            int(self.fdm_output.lla[2] * 1000),                     # alt
+
+            # Velocity: NED (m/s → cm/s → int)
+            int(self.fdm_output.velocity_ned[0] * 100),
+            int(self.fdm_output.velocity_ned[1] * 100),
+            int(self.fdm_output.velocity_ned[2] * 100),
+
+            0,                                                      #ind_airspeed
+            0,                                                      #true_airspeed,
+
+            # accelerations (mG -> MAVLINK specific)
+            int((self.fdm_output.acc[0] / 9.80665) * 1000),
+            int((self.fdm_output.acc[1] / 9.80665) * 1000),
+            int((self.fdm_output.acc[2] / 9.80665) * 1000)
         )
     
-'''
-    def send_hil_gps(self):
-        if not self.master:
-            return
-
-        t = int(time.time() * 1e6)
-
-        lat = int(self.fdm_output.lla[0] * 1e7)
-        lon = int(self.fdm_output.lla[1] * 1e7)
-        alt = int(self.fdm_output.lla[2] * 1000)
-
-        vn = int(self.fdm_output.velocity_ned[0] * 100)
-        ve = int(self.fdm_output.velocity_ned[1] * 100)
-        vd = int(self.fdm_output.velocity_ned[2] * 100)
-
-        self.master.mav.hil_gps_send(
-            t,
-            3,
-            lat, lon, alt,
-            50, 50,
-            int(abs(self.fdm_output.gnd_speed) * 100),
-            vn, ve, vd,
-            int(self.fdm_output.course_deg * 100),
-            10
-        )
-
-    # -----------------------------------------------------
-    def send_hil_state_quaternion(self):
-        if not self.master:
-            return
-        
-        quat = (
-            self.fdm_output.attitude_quaternion[0],
-            self.fdm_output.attitude_quaternion[1],
-            self.fdm_output.attitude_quaternion[2],
-            self.fdm_output.attitude_quaternion[3],
-        )
-
-        vx = int(self.fdm_output.velocity_ned[0] * 100)
-        vy = int(self.fdm_output.velocity_ned[1] * 100)
-        vz = int(self.fdm_output.velocity_ned[2] * 100)
-
-        self.master.mav.hil_state_quaternion_send(
-            int(time.time() * 1e6),
-            quat,
-            float(self.fdm_output.angular_velocity[0]),
-            float(self.fdm_output.angular_velocity[1]),
-            float(self.fdm_output.angular_velocity[2]),
-
-            int(self.fdm_output.lla[0] * 1e7),
-            int(self.fdm_output.lla[1] * 1e7),
-            int(self.fdm_output.lla[2] * 1000),
-
-            vx, vy, vz,
-            0, 0,
-            int(self.fdm_output.acc[0]),
-            int(self.fdm_output.acc[1]),
-            int(self.fdm_output.acc[2])
-        )
-
-
-
-'''

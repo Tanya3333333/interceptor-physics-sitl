@@ -7,9 +7,9 @@
  *
  * Code generated for Simulink model 'UAV_Dynamics'.
  *
- * Model version                  : 4.5
+ * Model version                  : 4.12
  * Simulink Coder version         : 23.2 (R2023b) 01-Aug-2023
- * C/C++ source code generated on : Fri Oct 10 10:35:15 2025
+ * C/C++ source code generated on : Mon Nov 17 17:09:33 2025
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: Intel->x86-64 (Windows64)
@@ -19,79 +19,14 @@
 
 #include "UAV_Dynamics.h"
 #include "rtwtypes.h"
+#include "UAV_Dynamics_types.h"
+#include "UAV_Dynamics_private.h"
 #include <math.h>
 #include <emmintrin.h>
+#include "rt_nonfinite.h"
 #include <string.h>
-#include <stddef.h>
+#include "rt_defines.h"
 #include <float.h>
-#define NumBitsPerChar                 8U
-
-/* Private macros used by the generated code to access rtModel */
-#ifndef rtmSetFirstInitCond
-#define rtmSetFirstInitCond(rtm, val)  ((rtm)->Timing.firstInitCondFlag = (val))
-#endif
-
-#ifndef rtmIsFirstInitCond
-#define rtmIsFirstInitCond(rtm)        ((rtm)->Timing.firstInitCondFlag)
-#endif
-
-#ifndef rtmIsMajorTimeStep
-#define rtmIsMajorTimeStep(rtm)        (((rtm)->Timing.simTimeStep) == MAJOR_TIME_STEP)
-#endif
-
-#ifndef rtmIsMinorTimeStep
-#define rtmIsMinorTimeStep(rtm)        (((rtm)->Timing.simTimeStep) == MINOR_TIME_STEP)
-#endif
-
-#ifndef rtmSetTPtr
-#define rtmSetTPtr(rtm, val)           ((rtm)->Timing.t = (val))
-#endif
-
-/* Invariant block signals (default storage) */
-const ConstB_UAV_Dynamics_T UAV_Dynamics_ConstB = {
-  { 0.0, 0.0, 0.0 },                   /* '<S20>/1//2' */
-
-  { 0.0, 0.0, 0.0 },                   /* '<S20>/sincos' */
-
-  { 1.0, 1.0, 1.0 },                   /* '<S20>/sincos' */
-  1.0,                                 /* '<S20>/q0' */
-  0.0,                                 /* '<S20>/q1' */
-  0.0,                                 /* '<S20>/q2' */
-  0.0,                                 /* '<S20>/q3' */
-
-  { 0.005, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.005, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.009, 0.0, 0.0, 0.0 },            /* '<S12>/Vector Concatenate' */
-
-  { 0.005, 0.0, 0.0, 0.0, 0.005, 0.0, 0.0, 0.0, 0.009 },/* '<S11>/Selector' */
-
-  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },/* '<S11>/Selector1' */
-
-  { 0.005, 0.0, 0.0, 0.0, 0.005, 0.0, 0.0, 0.0, 0.009 }/* '<S11>/Selector2' */
-};
-
-/* Constant parameters (default storage) */
-const ConstP_UAV_Dynamics_T UAV_Dynamics_ConstP = {
-  /* Expression: [21.5 1.16 43.1]
-   * Referenced by: '<S3>/IMU1'
-   */
-  { 21.5, 1.16, 43.1 },
-
-  /* Pooled Parameter (Mixed Expressions)
-   * Referenced by:
-   *   '<S3>/IMU1'
-   *   '<S7>/p,q,r '
-   *   '<S7>/ub,vb,wb'
-   *   '<S10>/Initial Euler Angles'
-   *   '<S50>/Constant'
-   *   '<S56>/Constant'
-   */
-  { 0.0, 0.0, 0.0 },
-
-  /* Pooled Parameter (Expression: fractalcoef().Denominator)
-   * Referenced by: '<S3>/IMU1'
-   */
-  { 1.0, -0.5 }
-};
 
 /* Block signals (default storage) */
 B_UAV_Dynamics_T UAV_Dynamics_B;
@@ -114,18 +49,6 @@ ExtY_UAV_Dynamics_T UAV_Dynamics_Y;
 /* Real-time model */
 static RT_MODEL_UAV_Dynamics_T UAV_Dynamics_M_;
 RT_MODEL_UAV_Dynamics_T *const UAV_Dynamics_M = &UAV_Dynamics_M_;
-extern real_T rt_atan2d_snf(real_T u0, real_T u1);
-extern real_T rt_roundd_snf(real_T u);
-extern void rt_mrdivide_U1d1x3_U2d_9vOrDY9Z(const real_T u0[3], const real_T u1
-  [9], real_T y[3]);
-extern real_T rt_remd_snf(real_T u0, real_T u1);
-extern real_T rt_hypotd_snf(real_T u0, real_T u1);
-extern real_T rt_powd_snf(real_T u0, real_T u1);
-extern real_T rt_urand_Upu32_Yd_f_pw_snf(uint32_T *u);
-extern real_T rt_nrand_Upu32_Yd_f_pw_snf(uint32_T *u);
-
-/* private model entry point functions */
-extern void UAV_Dynamics_derivatives(void);
 
 /* Forward declaration for local functions */
 static boolean_T UAV_Dynamics_isequal_p(const real_T varargin_1[3], const real_T
@@ -221,247 +144,6 @@ static void UAV_Dynamics_SystemCore_setup_p(fusion_simulink_imuSensor_UAV_T *obj
 static void UAV_Dyn_IMUSensorBase_resetImpl(fusion_simulink_imuSensor_UAV_T *obj);
 static void UAV_Dynamics_SystemCore_setup(fusion_internal_simulink_gpsS_T *obj);
 static void UAV_Dyn_GPSSensorBase_resetImpl(fusion_internal_simulink_gpsS_T *obj);
-static real_T rtGetInf(void);
-static real32_T rtGetInfF(void);
-static real_T rtGetMinusInf(void);
-static real32_T rtGetMinusInfF(void);
-static real_T rtGetNaN(void);
-static real32_T rtGetNaNF(void);
-
-/*===========*
- * Constants *
- *===========*/
-#define RT_PI                          3.14159265358979323846
-#define RT_PIF                         3.1415927F
-#define RT_LN_10                       2.30258509299404568402
-#define RT_LN_10F                      2.3025851F
-#define RT_LOG10E                      0.43429448190325182765
-#define RT_LOG10EF                     0.43429449F
-#define RT_E                           2.7182818284590452354
-#define RT_EF                          2.7182817F
-
-/*
- * UNUSED_PARAMETER(x)
- *   Used to specify that a function parameter (argument) is required but not
- *   accessed by the function body.
- */
-#ifndef UNUSED_PARAMETER
-#if defined(__LCC__)
-#define UNUSED_PARAMETER(x)                                      /* do nothing */
-#else
-
-/*
- * This is the semi-ANSI standard way of indicating that an
- * unused function parameter is required.
- */
-#define UNUSED_PARAMETER(x)            (void) (x)
-#endif
-#endif
-
-#define NOT_USING_NONFINITE_LITERALS   1
-
-extern real_T rtInf;
-extern real_T rtMinusInf;
-extern real_T rtNaN;
-extern real32_T rtInfF;
-extern real32_T rtMinusInfF;
-extern real32_T rtNaNF;
-static void rt_InitInfAndNaN(size_t realSize);
-static boolean_T rtIsInf(real_T value);
-static boolean_T rtIsInfF(real32_T value);
-static boolean_T rtIsNaN(real_T value);
-static boolean_T rtIsNaNF(real32_T value);
-typedef struct {
-  struct {
-    uint32_T wordH;
-    uint32_T wordL;
-  } words;
-} BigEndianIEEEDouble;
-
-typedef struct {
-  struct {
-    uint32_T wordL;
-    uint32_T wordH;
-  } words;
-} LittleEndianIEEEDouble;
-
-typedef struct {
-  union {
-    real32_T wordLreal;
-    uint32_T wordLuint;
-  } wordL;
-} IEEESingle;
-
-real_T rtInf;
-real_T rtMinusInf;
-real_T rtNaN;
-real32_T rtInfF;
-real32_T rtMinusInfF;
-real32_T rtNaNF;
-
-/*
- * Initialize rtInf needed by the generated code.
- * Inf is initialized as non-signaling. Assumes IEEE.
- */
-static real_T rtGetInf(void)
-{
-  size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
-  real_T inf = 0.0;
-  if (bitsPerReal == 32U) {
-    inf = rtGetInfF();
-  } else {
-    union {
-      LittleEndianIEEEDouble bitVal;
-      real_T fltVal;
-    } tmpVal;
-
-    tmpVal.bitVal.words.wordH = 0x7FF00000U;
-    tmpVal.bitVal.words.wordL = 0x00000000U;
-    inf = tmpVal.fltVal;
-  }
-
-  return inf;
-}
-
-/*
- * Initialize rtInfF needed by the generated code.
- * Inf is initialized as non-signaling. Assumes IEEE.
- */
-static real32_T rtGetInfF(void)
-{
-  IEEESingle infF;
-  infF.wordL.wordLuint = 0x7F800000U;
-  return infF.wordL.wordLreal;
-}
-
-/*
- * Initialize rtMinusInf needed by the generated code.
- * Inf is initialized as non-signaling. Assumes IEEE.
- */
-static real_T rtGetMinusInf(void)
-{
-  size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
-  real_T minf = 0.0;
-  if (bitsPerReal == 32U) {
-    minf = rtGetMinusInfF();
-  } else {
-    union {
-      LittleEndianIEEEDouble bitVal;
-      real_T fltVal;
-    } tmpVal;
-
-    tmpVal.bitVal.words.wordH = 0xFFF00000U;
-    tmpVal.bitVal.words.wordL = 0x00000000U;
-    minf = tmpVal.fltVal;
-  }
-
-  return minf;
-}
-
-/*
- * Initialize rtMinusInfF needed by the generated code.
- * Inf is initialized as non-signaling. Assumes IEEE.
- */
-static real32_T rtGetMinusInfF(void)
-{
-  IEEESingle minfF;
-  minfF.wordL.wordLuint = 0xFF800000U;
-  return minfF.wordL.wordLreal;
-}
-
-/*
- * Initialize rtNaN needed by the generated code.
- * NaN is initialized as non-signaling. Assumes IEEE.
- */
-static real_T rtGetNaN(void)
-{
-  size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
-  real_T nan = 0.0;
-  if (bitsPerReal == 32U) {
-    nan = rtGetNaNF();
-  } else {
-    union {
-      LittleEndianIEEEDouble bitVal;
-      real_T fltVal;
-    } tmpVal;
-
-    tmpVal.bitVal.words.wordH = 0xFFF80000U;
-    tmpVal.bitVal.words.wordL = 0x00000000U;
-    nan = tmpVal.fltVal;
-  }
-
-  return nan;
-}
-
-/*
- * Initialize rtNaNF needed by the generated code.
- * NaN is initialized as non-signaling. Assumes IEEE.
- */
-static real32_T rtGetNaNF(void)
-{
-  IEEESingle nanF = { { 0.0F } };
-
-  nanF.wordL.wordLuint = 0xFFC00000U;
-  return nanF.wordL.wordLreal;
-}
-
-/*
- * Initialize the rtInf, rtMinusInf, and rtNaN needed by the
- * generated code. NaN is initialized as non-signaling. Assumes IEEE.
- */
-static void rt_InitInfAndNaN(size_t realSize)
-{
-  (void) (realSize);
-  rtNaN = rtGetNaN();
-  rtNaNF = rtGetNaNF();
-  rtInf = rtGetInf();
-  rtInfF = rtGetInfF();
-  rtMinusInf = rtGetMinusInf();
-  rtMinusInfF = rtGetMinusInfF();
-}
-
-/* Test if value is infinite */
-static boolean_T rtIsInf(real_T value)
-{
-  return (boolean_T)((value==rtInf || value==rtMinusInf) ? 1U : 0U);
-}
-
-/* Test if single-precision value is infinite */
-static boolean_T rtIsInfF(real32_T value)
-{
-  return (boolean_T)(((value)==rtInfF || (value)==rtMinusInfF) ? 1U : 0U);
-}
-
-/* Test if value is not a number */
-static boolean_T rtIsNaN(real_T value)
-{
-  boolean_T result = (boolean_T) 0;
-  size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
-  if (bitsPerReal == 32U) {
-    result = rtIsNaNF((real32_T)value);
-  } else {
-    union {
-      LittleEndianIEEEDouble bitVal;
-      real_T fltVal;
-    } tmpVal;
-
-    tmpVal.fltVal = value;
-    result = (boolean_T)((tmpVal.bitVal.words.wordH & 0x7FF00000) == 0x7FF00000 &&
-                         ( (tmpVal.bitVal.words.wordH & 0x000FFFFF) != 0 ||
-                          (tmpVal.bitVal.words.wordL != 0) ));
-  }
-
-  return result;
-}
-
-/* Test if single-precision value is not a number */
-static boolean_T rtIsNaNF(real32_T value)
-{
-  IEEESingle tmp;
-  tmp.wordL.wordLreal = value;
-  return (boolean_T)( (tmp.wordL.wordLuint & 0x7F800000) == 0x7F800000 &&
-                     (tmp.wordL.wordLuint & 0x007FFFFF) != 0 );
-}
 
 /*
  * This function updates continuous states using the ODE4 fixed-step
@@ -531,6 +213,73 @@ static void rt_ertODEUpdateContinuousStates(RTWSolverInfo *si )
   }
 
   rtsiSetSimTimeStep(si,MAJOR_TIME_STEP);
+}
+
+/* System initialize for atomic system: */
+void CoordinateTransformationCo_Init(DW_CoordinateTransformationCo_T *localDW)
+{
+  /* Start for MATLABSystem: '<Root>/Coordinate Transformation Conversion1' */
+  localDW->objisempty = true;
+  localDW->obj.isInitialized = 1;
+}
+
+/* Output and update for atomic system: */
+void CoordinateTransformationConvers(const real_T rtu_0[3],
+  B_CoordinateTransformationCon_T *localB)
+{
+  real_T CoordinateTransformationConve_0;
+  real_T CoordinateTransformationConve_b;
+  real_T c_idx_0;
+  real_T c_idx_1;
+  real_T c_idx_2;
+  real_T x_tmp;
+  real_T x_tmp_idx_0;
+  real_T x_tmp_idx_1;
+
+  /* Start for MATLABSystem: '<Root>/Coordinate Transformation Conversion1' */
+  x_tmp = rtu_0[0] / 2.0;
+  x_tmp_idx_0 = x_tmp;
+
+  /* MATLABSystem: '<Root>/Coordinate Transformation Conversion1' */
+  c_idx_0 = x_tmp;
+
+  /* Start for MATLABSystem: '<Root>/Coordinate Transformation Conversion1' */
+  x_tmp = rtu_0[1] / 2.0;
+  x_tmp_idx_1 = x_tmp;
+
+  /* MATLABSystem: '<Root>/Coordinate Transformation Conversion1' */
+  c_idx_1 = x_tmp;
+
+  /* Start for MATLABSystem: '<Root>/Coordinate Transformation Conversion1' */
+  x_tmp = rtu_0[2] / 2.0;
+
+  /* MATLABSystem: '<Root>/Coordinate Transformation Conversion1' */
+  c_idx_0 = cos(c_idx_0);
+  x_tmp_idx_0 = sin(x_tmp_idx_0);
+  c_idx_1 = cos(c_idx_1);
+  x_tmp_idx_1 = sin(x_tmp_idx_1);
+  c_idx_2 = cos(x_tmp);
+  x_tmp = sin(x_tmp);
+
+  /* Start for MATLABSystem: '<Root>/Coordinate Transformation Conversion1' */
+  CoordinateTransformationConve_b = c_idx_0 * c_idx_1;
+  CoordinateTransformationConve_0 = x_tmp_idx_0 * x_tmp_idx_1;
+
+  /* MATLABSystem: '<Root>/Coordinate Transformation Conversion1' */
+  localB->CoordinateTransformationConve_b[0] = CoordinateTransformationConve_b *
+    c_idx_2 + CoordinateTransformationConve_0 * x_tmp;
+  localB->CoordinateTransformationConve_b[1] = CoordinateTransformationConve_b *
+    x_tmp - CoordinateTransformationConve_0 * c_idx_2;
+
+  /* Start for MATLABSystem: '<Root>/Coordinate Transformation Conversion1' */
+  CoordinateTransformationConve_b = x_tmp_idx_0 * c_idx_1;
+  CoordinateTransformationConve_0 = c_idx_0 * x_tmp_idx_1;
+
+  /* MATLABSystem: '<Root>/Coordinate Transformation Conversion1' */
+  localB->CoordinateTransformationConve_b[2] = CoordinateTransformationConve_0 *
+    c_idx_2 + CoordinateTransformationConve_b * x_tmp;
+  localB->CoordinateTransformationConve_b[3] = CoordinateTransformationConve_b *
+    c_idx_2 - CoordinateTransformationConve_0 * x_tmp;
 }
 
 real_T rt_atan2d_snf(real_T u0, real_T u1)
@@ -3974,24 +3723,23 @@ void UAV_Dynamics_step(void)
   c_coder_internal_mt19937ar_UA_T *obj;
   real_T rtb_Transpose_tmp[9];
   real_T rtb_VectorConcatenate[9];
-  real_T rtb_CoordinateTransformationCon[4];
-  real_T c[3];
-  real_T c_0[3];
+  real_T VectorConcatenate[3];
   real_T rtb_MatrixMultiply1[3];
   real_T rtb_Sum_ha[3];
   real_T rtb_Transpose_tmp_0[3];
   real_T rtb_Transpose_tmp_1[3];
   real_T rtb_VectorConcatenate_0[3];
+  real_T rtb_netM[3];
   real_T tmp_0[3];
   real_T au;
   real_T bv;
-  real_T gndSpeed;
-  real_T rtb_TransferFcn;
+  real_T cosprev;
+  real_T rtb_TransferFcn2;
+  real_T rtb_TransferFcn3;
   real_T rtb_TransferFcn4;
   real_T rtb_VectorConcatenate_tmp;
+  real_T rtb_VectorConcatenate_tmp_tmp;
   real_T rtb_fcn3;
-  real_T rtb_ixj;
-  real_T rtb_ixj_k;
   real_T rtb_ixk;
   real_T rtb_jxi;
   real_T rtb_kxi;
@@ -4031,36 +3779,39 @@ void UAV_Dynamics_step(void)
    *  Sqrt: '<S41>/sqrt'
    *  Sum: '<S34>/Sum'
    */
-  rtb_TransferFcn = sqrt(((UAV_Dynamics_X.q0q1q2q3_CSTATE[0] *
-    UAV_Dynamics_X.q0q1q2q3_CSTATE[0] + UAV_Dynamics_X.q0q1q2q3_CSTATE[1] *
-    UAV_Dynamics_X.q0q1q2q3_CSTATE[1]) + UAV_Dynamics_X.q0q1q2q3_CSTATE[2] *
-    UAV_Dynamics_X.q0q1q2q3_CSTATE[2]) + UAV_Dynamics_X.q0q1q2q3_CSTATE[3] *
-    UAV_Dynamics_X.q0q1q2q3_CSTATE[3]);
+  tmp = sqrt(((UAV_Dynamics_X.q0q1q2q3_CSTATE[0] *
+               UAV_Dynamics_X.q0q1q2q3_CSTATE[0] +
+               UAV_Dynamics_X.q0q1q2q3_CSTATE[1] *
+               UAV_Dynamics_X.q0q1q2q3_CSTATE[1]) +
+              UAV_Dynamics_X.q0q1q2q3_CSTATE[2] *
+              UAV_Dynamics_X.q0q1q2q3_CSTATE[2]) +
+             UAV_Dynamics_X.q0q1q2q3_CSTATE[3] * UAV_Dynamics_X.q0q1q2q3_CSTATE
+             [3]);
 
   /* Product: '<S32>/Product' incorporates:
    *  Integrator: '<S10>/q0 q1 q2 q3'
    *  Sqrt: '<S33>/sqrt'
    */
-  rtb_kxi = UAV_Dynamics_X.q0q1q2q3_CSTATE[0] / rtb_TransferFcn;
+  rtb_kxi = UAV_Dynamics_X.q0q1q2q3_CSTATE[0] / tmp;
 
   /* Product: '<S32>/Product1' incorporates:
    *  Integrator: '<S10>/q0 q1 q2 q3'
    *  Sqrt: '<S33>/sqrt'
    */
-  rtb_ixk = UAV_Dynamics_X.q0q1q2q3_CSTATE[1] / rtb_TransferFcn;
+  rtb_ixk = UAV_Dynamics_X.q0q1q2q3_CSTATE[1] / tmp;
 
   /* Product: '<S32>/Product2' incorporates:
    *  Integrator: '<S10>/q0 q1 q2 q3'
    *  Sqrt: '<S33>/sqrt'
    */
-  rtb_jxi = UAV_Dynamics_X.q0q1q2q3_CSTATE[2] / rtb_TransferFcn;
+  rtb_jxi = UAV_Dynamics_X.q0q1q2q3_CSTATE[2] / tmp;
 
   /* Product: '<S32>/Product3' incorporates:
    *  Integrator: '<S10>/q0 q1 q2 q3'
    *  Product: '<S36>/Product3'
    *  Sqrt: '<S33>/sqrt'
    */
-  rtb_ixj = UAV_Dynamics_X.q0q1q2q3_CSTATE[3] / rtb_TransferFcn;
+  rtb_TransferFcn4 = UAV_Dynamics_X.q0q1q2q3_CSTATE[3] / tmp;
 
   /* Product: '<S22>/Product3' incorporates:
    *  Product: '<S26>/Product3'
@@ -4072,7 +3823,7 @@ void UAV_Dynamics_step(void)
    *  Fcn: '<S19>/fcn5'
    *  Product: '<S26>/Product2'
    */
-  rtb_ixj_k = rtb_ixk * rtb_ixk;
+  rtb_TransferFcn3 = rtb_ixk * rtb_ixk;
 
   /* Product: '<S22>/Product1' incorporates:
    *  Fcn: '<S19>/fcn2'
@@ -4080,13 +3831,13 @@ void UAV_Dynamics_step(void)
    *  Product: '<S26>/Product1'
    *  Product: '<S30>/Product1'
    */
-  gndSpeed = rtb_jxi * rtb_jxi;
+  rtb_TransferFcn2 = rtb_jxi * rtb_jxi;
 
   /* Product: '<S22>/Product' incorporates:
-   *  Fcn: '<S19>/fcn5'
+   *  Fcn: '<S19>/fcn2'
    *  Product: '<S32>/Product3'
    */
-  au = rtb_ixj * rtb_ixj;
+  au = rtb_TransferFcn4 * rtb_TransferFcn4;
 
   /* Sum: '<S22>/Sum' incorporates:
    *  Product: '<S22>/Product'
@@ -4094,32 +3845,33 @@ void UAV_Dynamics_step(void)
    *  Product: '<S22>/Product2'
    *  Product: '<S22>/Product3'
    */
-  rtb_VectorConcatenate[0] = ((rtb_fcn3 + rtb_ixj_k) - gndSpeed) - au;
+  rtb_VectorConcatenate[0] = ((rtb_fcn3 + rtb_TransferFcn3) - rtb_TransferFcn2)
+    - au;
 
   /* Product: '<S25>/Product3' incorporates:
    *  Product: '<S23>/Product3'
    *  Product: '<S32>/Product3'
    */
-  bv = rtb_ixj * rtb_kxi;
+  bv = rtb_TransferFcn4 * rtb_kxi;
 
   /* Product: '<S25>/Product2' incorporates:
    *  Fcn: '<S19>/fcn1'
    *  Product: '<S23>/Product2'
    */
-  rtb_TransferFcn4 = rtb_ixk * rtb_jxi;
+  cosprev = rtb_ixk * rtb_jxi;
 
   /* Gain: '<S25>/Gain' incorporates:
    *  Product: '<S25>/Product2'
    *  Product: '<S25>/Product3'
    *  Sum: '<S25>/Sum'
    */
-  rtb_VectorConcatenate[1] = (rtb_TransferFcn4 - bv) * 2.0;
+  rtb_VectorConcatenate[1] = (cosprev - bv) * 2.0;
 
   /* Product: '<S28>/Product2' incorporates:
    *  Fcn: '<S19>/fcn3'
    *  Product: '<S32>/Product3'
    */
-  tmp = rtb_ixk * rtb_ixj;
+  rtb_VectorConcatenate_tmp_tmp = rtb_ixk * rtb_TransferFcn4;
 
   /* Product: '<S28>/Product1' incorporates:
    *  Product: '<S24>/Product1'
@@ -4131,19 +3883,20 @@ void UAV_Dynamics_step(void)
    *  Product: '<S28>/Product2'
    *  Sum: '<S28>/Sum'
    */
-  rtb_VectorConcatenate[2] = (rtb_VectorConcatenate_tmp + tmp) * 2.0;
+  rtb_VectorConcatenate[2] = (rtb_VectorConcatenate_tmp +
+    rtb_VectorConcatenate_tmp_tmp) * 2.0;
 
   /* Gain: '<S23>/Gain' incorporates:
    *  Sum: '<S23>/Sum'
    */
-  rtb_VectorConcatenate[3] = (bv + rtb_TransferFcn4) * 2.0;
+  rtb_VectorConcatenate[3] = (bv + cosprev) * 2.0;
 
   /* Sum: '<S26>/Sum' incorporates:
    *  Product: '<S22>/Product'
    *  Sum: '<S30>/Sum'
    */
-  rtb_fcn3 -= rtb_ixj_k;
-  rtb_VectorConcatenate[4] = (rtb_fcn3 + gndSpeed) - au;
+  rtb_fcn3 -= rtb_TransferFcn3;
+  rtb_VectorConcatenate[4] = (rtb_fcn3 + rtb_TransferFcn2) - au;
 
   /* Product: '<S29>/Product1' incorporates:
    *  Product: '<S27>/Product1'
@@ -4154,7 +3907,7 @@ void UAV_Dynamics_step(void)
    *  Fcn: '<S19>/fcn4'
    *  Product: '<S32>/Product3'
    */
-  rtb_kxi_tmp = rtb_jxi * rtb_ixj;
+  rtb_kxi_tmp = rtb_jxi * rtb_TransferFcn4;
 
   /* Gain: '<S29>/Gain' incorporates:
    *  Product: '<S29>/Product1'
@@ -4167,7 +3920,8 @@ void UAV_Dynamics_step(void)
    *  Product: '<S28>/Product2'
    *  Sum: '<S24>/Sum'
    */
-  rtb_VectorConcatenate[6] = (tmp - rtb_VectorConcatenate_tmp) * 2.0;
+  rtb_VectorConcatenate[6] = (rtb_VectorConcatenate_tmp_tmp -
+    rtb_VectorConcatenate_tmp) * 2.0;
 
   /* Gain: '<S27>/Gain' incorporates:
    *  Product: '<S29>/Product2'
@@ -4178,7 +3932,7 @@ void UAV_Dynamics_step(void)
   /* Sum: '<S30>/Sum' incorporates:
    *  Product: '<S22>/Product'
    */
-  rtb_VectorConcatenate[8] = (rtb_fcn3 - gndSpeed) + au;
+  rtb_VectorConcatenate[8] = (rtb_fcn3 - rtb_TransferFcn2) + au;
   for (count = 0; count < 3; count++) {
     /* Math: '<S4>/Transpose' incorporates:
      *  Concatenate: '<S31>/Vector Concatenate'
@@ -4236,10 +3990,23 @@ void UAV_Dynamics_step(void)
   /* Product: '<S36>/Product' incorporates:
    *  Integrator: '<S10>/q0 q1 q2 q3'
    */
-  rtb_kxi = UAV_Dynamics_X.q0q1q2q3_CSTATE[0] / rtb_TransferFcn;
+  rtb_kxi = UAV_Dynamics_X.q0q1q2q3_CSTATE[0] / tmp;
+
+  /* Fcn: '<S19>/fcn2' incorporates:
+   *  Fcn: '<S19>/fcn5'
+   */
+  tmp = rtb_kxi * rtb_kxi;
+
+  /* Trigonometry: '<S35>/Trigonometric Function1' incorporates:
+   *  Concatenate: '<S35>/Vector Concatenate'
+   *  Fcn: '<S19>/fcn1'
+   *  Fcn: '<S19>/fcn2'
+   */
+  VectorConcatenate[0] = rt_atan2d_snf((rtb_kxi * rtb_TransferFcn4 + cosprev) *
+    2.0, ((tmp + rtb_TransferFcn3) - rtb_TransferFcn2) - au);
 
   /* Fcn: '<S19>/fcn3' */
-  rtb_fcn3 = (tmp - rtb_kxi * rtb_jxi) * -2.0;
+  rtb_fcn3 = (rtb_VectorConcatenate_tmp_tmp - rtb_kxi * rtb_jxi) * -2.0;
 
   /* If: '<S37>/If' */
   if (rtsiIsModeUpdateTimeStep(&UAV_Dynamics_M->solverInfo)) {
@@ -4307,73 +4074,51 @@ void UAV_Dynamics_step(void)
     rtb_fcn3 = UAV_Dynamics_B.Merge;
   }
 
-  rtb_fcn3 = asin(rtb_fcn3);
+  VectorConcatenate[1] = asin(rtb_fcn3);
 
   /* End of Trigonometry: '<S35>/trigFcn' */
-
-  /* Fcn: '<S19>/fcn5' incorporates:
-   *  Fcn: '<S19>/fcn2'
-   */
-  rtb_TransferFcn = rtb_kxi * rtb_kxi;
 
   /* Trigonometry: '<S35>/Trigonometric Function3' incorporates:
    *  Concatenate: '<S35>/Vector Concatenate'
    *  Fcn: '<S19>/fcn4'
    *  Fcn: '<S19>/fcn5'
    */
-  rtb_ixk = rt_atan2d_snf((rtb_kxi * rtb_ixk + rtb_kxi_tmp) * 2.0,
-    ((rtb_TransferFcn - rtb_ixj_k) - gndSpeed) + au);
+  VectorConcatenate[2] = rt_atan2d_snf((rtb_kxi * rtb_ixk + rtb_kxi_tmp) * 2.0,
+    ((tmp - rtb_TransferFcn3) - rtb_TransferFcn2) + au);
   if (rtmIsMajorTimeStep(UAV_Dynamics_M)) {
-    /* Start for MATLABSystem: '<S3>/Coordinate Transformation Conversion1' incorporates:
-     *  Fcn: '<S19>/fcn1'
-     *  Fcn: '<S19>/fcn2'
-     *  Trigonometry: '<S35>/Trigonometric Function1'
+    CoordinateTransformationConvers(VectorConcatenate,
+      &UAV_Dynamics_B.CoordinateTransformationConv_pn);
+    CoordinateTransformationConvers(VectorConcatenate,
+      &UAV_Dynamics_B.CoordinateTransformationConve_p);
+
+    /* Outport: '<Root>/quat_raw' incorporates:
+     *  MATLABSystem: '<Root>/Coordinate Transformation Conversion1'
      */
-    rtb_ixj_k = rt_atan2d_snf((rtb_kxi * rtb_ixj + rtb_TransferFcn4) * 2.0,
-      ((rtb_TransferFcn + rtb_ixj_k) - gndSpeed) - au) / 2.0;
-    rtb_Sum_ha[0] = rtb_ixj_k;
-
-    /* MATLABSystem: '<S3>/Coordinate Transformation Conversion1' */
-    c[0] = rtb_ixj_k;
-
-    /* Start for MATLABSystem: '<S3>/Coordinate Transformation Conversion1' */
-    rtb_ixj_k = rtb_fcn3 / 2.0;
-    rtb_Sum_ha[1] = rtb_ixj_k;
-
-    /* MATLABSystem: '<S3>/Coordinate Transformation Conversion1' */
-    c[1] = rtb_ixj_k;
-
-    /* Start for MATLABSystem: '<S3>/Coordinate Transformation Conversion1' */
-    rtb_ixj_k = rtb_ixk / 2.0;
-
-    /* MATLABSystem: '<S3>/Coordinate Transformation Conversion1' */
-    c[0] = cos(c[0]);
-    rtb_Sum_ha[0] = sin(rtb_Sum_ha[0]);
-    c[1] = cos(c[1]);
-    rtb_Sum_ha[1] = sin(rtb_Sum_ha[1]);
-    c[2] = cos(rtb_ixj_k);
-    rtb_Sum_ha[2] = sin(rtb_ixj_k);
-    rtb_CoordinateTransformationCon[0] = c[0] * c[1] * c[2] + rtb_Sum_ha[0] *
-      rtb_Sum_ha[1] * rtb_Sum_ha[2];
-    rtb_CoordinateTransformationCon[1] = c[0] * c[1] * rtb_Sum_ha[2] -
-      rtb_Sum_ha[0] * rtb_Sum_ha[1] * c[2];
-    rtb_CoordinateTransformationCon[2] = c[0] * rtb_Sum_ha[1] * c[2] +
-      rtb_Sum_ha[0] * c[1] * rtb_Sum_ha[2];
-    rtb_CoordinateTransformationCon[3] = rtb_Sum_ha[0] * c[1] * c[2] - c[0] *
-      rtb_Sum_ha[1] * rtb_Sum_ha[2];
+    UAV_Dynamics_Y.quat_raw[0] =
+      UAV_Dynamics_B.CoordinateTransformationConve_p.CoordinateTransformationConve_b
+      [0];
+    UAV_Dynamics_Y.quat_raw[1] =
+      UAV_Dynamics_B.CoordinateTransformationConve_p.CoordinateTransformationConve_b
+      [1];
+    UAV_Dynamics_Y.quat_raw[2] =
+      UAV_Dynamics_B.CoordinateTransformationConve_p.CoordinateTransformationConve_b
+      [2];
+    UAV_Dynamics_Y.quat_raw[3] =
+      UAV_Dynamics_B.CoordinateTransformationConve_p.CoordinateTransformationConve_b
+      [3];
   }
 
   /* TransferFcn: '<S63>/Transfer Fcn4' */
   rtb_TransferFcn4 = 80.0 * UAV_Dynamics_X.TransferFcn4_CSTATE;
 
   /* TransferFcn: '<S63>/Transfer Fcn3' */
-  rtb_kxi = 80.0 * UAV_Dynamics_X.TransferFcn3_CSTATE;
+  rtb_TransferFcn3 = 80.0 * UAV_Dynamics_X.TransferFcn3_CSTATE;
 
   /* TransferFcn: '<S63>/Transfer Fcn2' */
-  rtb_jxi = 80.0 * UAV_Dynamics_X.TransferFcn2_CSTATE;
+  rtb_TransferFcn2 = 80.0 * UAV_Dynamics_X.TransferFcn2_CSTATE;
 
   /* TransferFcn: '<S63>/Transfer Fcn' */
-  rtb_TransferFcn = 80.0 * UAV_Dynamics_X.TransferFcn_CSTATE;
+  rtb_kxi = 80.0 * UAV_Dynamics_X.TransferFcn_CSTATE;
 
   /* MATLAB Function: '<S53>/MATLAB Function' incorporates:
    *  Constant: '<S53>/Constant'
@@ -4383,19 +4128,20 @@ void UAV_Dynamics_step(void)
    *  TransferFcn: '<S64>/Transfer Fcn3'
    *  TransferFcn: '<S64>/Transfer Fcn4'
    */
-  rtb_ixj = 0.11667261889578034 * -rtb_TransferFcn4;
-  rtb_ixj_k = -0.11667261889578034 * -rtb_kxi;
-  c[0] = ((rtb_ixj + rtb_ixj_k) + -0.11667261889578034 * -rtb_jxi) +
-    0.11667261889578034 * -rtb_TransferFcn;
-  c[1] = (((0.0 - rtb_ixj) + (0.0 - rtb_ixj_k)) + (0.0 - 0.11667261889578034 *
-           -rtb_jxi)) + (0.0 - -0.11667261889578034 * -rtb_TransferFcn);
-  c[2] = (((0.0 - (-UAV_Dynamics_X.TransferFcn1_CSTATE)) -
-           (-UAV_Dynamics_X.TransferFcn2_CSTATE_i)) -
-          UAV_Dynamics_X.TransferFcn3_CSTATE_o) -
+  rtb_fcn3 = 0.11667261889578034 * -rtb_TransferFcn4;
+  rtb_ixk = -0.11667261889578034 * -rtb_TransferFcn3;
+  rtb_netM[0] = ((rtb_fcn3 + rtb_ixk) + -0.11667261889578034 * -rtb_TransferFcn2)
+    + 0.11667261889578034 * -rtb_kxi;
+  rtb_netM[1] = (((0.0 - rtb_fcn3) + (0.0 - rtb_ixk)) + (0.0 -
+    0.11667261889578034 * -rtb_TransferFcn2)) + (0.0 - -0.11667261889578034 *
+    -rtb_kxi);
+  rtb_netM[2] = (((0.0 - (-UAV_Dynamics_X.TransferFcn1_CSTATE)) -
+                  (-UAV_Dynamics_X.TransferFcn2_CSTATE_i)) -
+                 UAV_Dynamics_X.TransferFcn3_CSTATE_o) -
     UAV_Dynamics_X.TransferFcn4_CSTATE_j;
 
   /* DotProduct: '<S50>/Dot Product' */
-  rtb_ixj_k = 0.0;
+  rtb_fcn3 = 0.0;
   for (count = 0; count < 3; count++) {
     /* Product: '<S52>/Matrix Multiply1' incorporates:
      *  Integrator: '<S7>/ub,vb,wb'
@@ -4412,27 +4158,27 @@ void UAV_Dynamics_step(void)
      *  Integrator: '<S7>/ub,vb,wb'
      *  Product: '<S50>/wind (body frame)'
      */
-    gndSpeed = ((rtb_VectorConcatenate[count + 3] * 0.0 +
-                 rtb_VectorConcatenate[count] * 0.0) +
-                rtb_VectorConcatenate[count + 6] * 0.0) -
+    rtb_jxi = ((rtb_VectorConcatenate[count + 3] * 0.0 +
+                rtb_VectorConcatenate[count] * 0.0) +
+               rtb_VectorConcatenate[count + 6] * 0.0) -
       UAV_Dynamics_X.ubvbwb_CSTATE[count];
-    rtb_Sum_ha[count] = gndSpeed;
+    rtb_Sum_ha[count] = rtb_jxi;
 
     /* DotProduct: '<S50>/Dot Product' */
-    rtb_ixj_k += gndSpeed * gndSpeed;
+    rtb_fcn3 += rtb_jxi * rtb_jxi;
   }
 
   /* Saturate: '<S50>/Saturation' incorporates:
    *  DotProduct: '<S50>/Dot Product'
    */
-  if (rtb_ixj_k <= 0.0001) {
-    rtb_ixj_k = 0.0001;
+  if (rtb_fcn3 <= 0.0001) {
+    rtb_fcn3 = 0.0001;
   }
 
   /* Sqrt: '<S50>/Square Root' incorporates:
    *  Saturate: '<S50>/Saturation'
    */
-  rtb_ixj_k = sqrt(rtb_ixj_k);
+  rtb_fcn3 = sqrt(rtb_fcn3);
 
   /* Switch: '<S57>/Switch' incorporates:
    *  Constant: '<S57>/Constant'
@@ -4444,19 +4190,19 @@ void UAV_Dynamics_step(void)
    *  UnaryMinus: '<S57>/Unary Minus1'
    */
   if (-UAV_Dynamics_X.xeyeze_CSTATE[2] > 0.0) {
-    rtb_ixj = 0.0;
+    rtb_ixk = 0.0;
   } else {
-    rtb_ixj = -3100.0 * -UAV_Dynamics_X.xeyeze_CSTATE[2] + -100.0 *
+    rtb_ixk = -3100.0 * -UAV_Dynamics_X.xeyeze_CSTATE[2] + -100.0 *
       -rtb_MatrixMultiply1[2];
   }
 
   /* End of Switch: '<S57>/Switch' */
 
   /* Saturate: '<S57>/Saturation' */
-  if (rtb_ixj > 80.0) {
-    rtb_ixj = 80.0;
-  } else if (rtb_ixj < 0.0) {
-    rtb_ixj = 0.0;
+  if (rtb_ixk > 80.0) {
+    rtb_ixk = 80.0;
+  } else if (rtb_ixk < 0.0) {
+    rtb_ixk = 0.0;
   }
 
   /* End of Saturate: '<S57>/Saturation' */
@@ -4489,7 +4235,8 @@ void UAV_Dynamics_step(void)
    */
   tmp_0[0] = 0.0;
   tmp_0[1] = 0.0;
-  tmp_0[2] = -(((rtb_TransferFcn4 + rtb_kxi) + rtb_jxi) + rtb_TransferFcn);
+  tmp_0[2] = -(((rtb_TransferFcn4 + rtb_TransferFcn3) + rtb_TransferFcn2) +
+               rtb_kxi);
 
   /* Saturate: '<S55>/Saturation' incorporates:
    *  Gain: '<S60>/friction coefficient'
@@ -4498,16 +4245,16 @@ void UAV_Dynamics_step(void)
    *  Trigonometry: '<S60>/Tanh'
    *  UnaryMinus: '<S55>/Unary Minus'
    */
-  gndSpeed = -(tanh(50.0 * rtb_MatrixMultiply1[0]) * 0.5 * rtb_ixj);
-  if (gndSpeed > 20.0) {
+  rtb_jxi = -(tanh(50.0 * rtb_MatrixMultiply1[0]) * 0.5 * rtb_ixk);
+  if (rtb_jxi > 20.0) {
     /* SignalConversion generated from: '<S52>/Matrix Multiply' */
-    gndSpeed = 20.0;
-  } else if (gndSpeed < -20.0) {
+    rtb_jxi = 20.0;
+  } else if (rtb_jxi < -20.0) {
     /* SignalConversion generated from: '<S52>/Matrix Multiply' */
-    gndSpeed = -20.0;
+    rtb_jxi = -20.0;
   }
 
-  rtb_TransferFcn4 = -(tanh(50.0 * rtb_MatrixMultiply1[1]) * 0.5 * rtb_ixj);
+  rtb_TransferFcn4 = -(tanh(50.0 * rtb_MatrixMultiply1[1]) * 0.5 * rtb_ixk);
   if (rtb_TransferFcn4 > 20.0) {
     /* SignalConversion generated from: '<S52>/Matrix Multiply' */
     rtb_TransferFcn4 = 20.0;
@@ -4554,9 +4301,9 @@ void UAV_Dynamics_step(void)
      */
     _mm_storeu_pd(&rtb_Sum_ha[count], _mm_div_pd(_mm_add_pd(_mm_add_pd
       (_mm_add_pd(_mm_mul_pd(tmp_3, _mm_set1_pd(rtb_TransferFcn4)), _mm_mul_pd
-                  (tmp_6, _mm_set1_pd(gndSpeed))), _mm_mul_pd(tmp_4, _mm_set1_pd
-      (-rtb_ixj))), _mm_add_pd(_mm_add_pd(_mm_mul_pd(tmp_7, tmp_5), tmp_1),
-      _mm_mul_pd(_mm_mul_pd(_mm_set1_pd(rtb_ixj_k), tmp_2), _mm_set1_pd(0.01)))),
+                  (tmp_6, _mm_set1_pd(rtb_jxi))), _mm_mul_pd(tmp_4, _mm_set1_pd(
+      -rtb_ixk))), _mm_add_pd(_mm_add_pd(_mm_mul_pd(tmp_7, tmp_5), tmp_1),
+      _mm_mul_pd(_mm_mul_pd(_mm_set1_pd(rtb_fcn3), tmp_2), _mm_set1_pd(0.01)))),
       tmp_7));
   }
 
@@ -4573,9 +4320,9 @@ void UAV_Dynamics_step(void)
    */
   for (count = 2; count < 3; count++) {
     rtb_Sum_ha[count] = (((rtb_VectorConcatenate[count + 3] * rtb_TransferFcn4 +
-      rtb_VectorConcatenate[count] * gndSpeed) + rtb_VectorConcatenate[count + 6]
-                          * -rtb_ixj) + ((0.8 * rtb_VectorConcatenate_0[count] +
-      tmp_0[count]) + rtb_ixj_k * rtb_Sum_ha[count] * 0.01)) / 0.8;
+      rtb_VectorConcatenate[count] * rtb_jxi) + rtb_VectorConcatenate[count + 6]
+                          * -rtb_ixk) + ((0.8 * rtb_VectorConcatenate_0[count] +
+      tmp_0[count]) + rtb_fcn3 * rtb_Sum_ha[count] * 0.01)) / 0.8;
   }
 
   if (rtmIsMajorTimeStep(UAV_Dynamics_M)) {
@@ -5011,16 +4758,16 @@ void UAV_Dynamics_step(void)
     /* Product: '<S4>/Matrix Multiply1' incorporates:
      *  Math: '<S4>/Transpose'
      */
-    rtb_ixj_k = rtb_Sum_ha[0];
-    gndSpeed = rtb_Sum_ha[1];
+    rtb_fcn3 = rtb_Sum_ha[0];
+    rtb_jxi = rtb_Sum_ha[1];
     rtb_TransferFcn4 = rtb_Sum_ha[2];
 
     /* Integrator: '<S7>/p,q,r ' incorporates:
      *  Math: '<S4>/Transpose'
      */
-    rtb_kxi = UAV_Dynamics_X.pqr_CSTATE[0];
-    rtb_jxi = UAV_Dynamics_X.pqr_CSTATE[1];
-    rtb_TransferFcn = UAV_Dynamics_X.pqr_CSTATE[2];
+    rtb_TransferFcn3 = UAV_Dynamics_X.pqr_CSTATE[0];
+    rtb_TransferFcn2 = UAV_Dynamics_X.pqr_CSTATE[1];
+    rtb_kxi = UAV_Dynamics_X.pqr_CSTATE[2];
     for (count = 0; count <= 0; count += 2) {
       /* Math: '<S4>/Transpose' */
       tmp_3 = _mm_loadu_pd(&rtb_Transpose_tmp[count]);
@@ -5032,67 +4779,68 @@ void UAV_Dynamics_step(void)
        *  Math: '<S4>/Transpose'
        */
       _mm_storeu_pd(&rtb_Transpose_tmp_1[count], _mm_add_pd(_mm_mul_pd(tmp_4,
-        _mm_set1_pd(rtb_TransferFcn)), _mm_add_pd(_mm_mul_pd(tmp_6, _mm_set1_pd
-        (rtb_jxi)), _mm_mul_pd(tmp_3, _mm_set1_pd(rtb_kxi)))));
+        _mm_set1_pd(rtb_kxi)), _mm_add_pd(_mm_mul_pd(tmp_6, _mm_set1_pd
+        (rtb_TransferFcn2)), _mm_mul_pd(tmp_3, _mm_set1_pd(rtb_TransferFcn3)))));
 
       /* Product: '<S4>/Matrix Multiply1' incorporates:
        *  Math: '<S4>/Transpose'
        */
       _mm_storeu_pd(&rtb_Transpose_tmp_0[count], _mm_add_pd(_mm_mul_pd(tmp_4,
         _mm_set1_pd(rtb_TransferFcn4)), _mm_add_pd(_mm_mul_pd(tmp_6, _mm_set1_pd
-        (gndSpeed)), _mm_mul_pd(tmp_3, _mm_set1_pd(rtb_ixj_k)))));
+        (rtb_jxi)), _mm_mul_pd(tmp_3, _mm_set1_pd(rtb_fcn3)))));
     }
 
     for (count = 2; count < 3; count++) {
       /* Math: '<S4>/Transpose' */
-      au = rtb_Transpose_tmp[count];
+      cosprev = rtb_Transpose_tmp[count];
 
       /* Product: '<S4>/Matrix Multiply1' incorporates:
        *  Math: '<S4>/Transpose'
        */
-      bv = au * rtb_ixj_k;
+      tmp = cosprev * rtb_fcn3;
 
       /* Product: '<S4>/Matrix Multiply' incorporates:
        *  Integrator: '<S7>/p,q,r '
        *  Math: '<S4>/Transpose'
        */
-      tmp = au * rtb_kxi;
+      au = cosprev * rtb_TransferFcn3;
 
       /* Math: '<S4>/Transpose' */
-      au = rtb_Transpose_tmp[count + 3];
+      cosprev = rtb_Transpose_tmp[count + 3];
 
       /* Product: '<S4>/Matrix Multiply1' incorporates:
        *  Math: '<S4>/Transpose'
        */
-      bv += au * gndSpeed;
+      tmp += cosprev * rtb_jxi;
 
       /* Product: '<S4>/Matrix Multiply' incorporates:
        *  Integrator: '<S7>/p,q,r '
        *  Math: '<S4>/Transpose'
        */
-      tmp += au * rtb_jxi;
+      au += cosprev * rtb_TransferFcn2;
 
       /* Math: '<S4>/Transpose' */
-      au = rtb_Transpose_tmp[count + 6];
+      cosprev = rtb_Transpose_tmp[count + 6];
 
       /* Product: '<S4>/Matrix Multiply' incorporates:
        *  Integrator: '<S7>/p,q,r '
        *  Math: '<S4>/Transpose'
        */
-      rtb_Transpose_tmp_1[count] = au * rtb_TransferFcn + tmp;
+      rtb_Transpose_tmp_1[count] = cosprev * rtb_kxi + au;
 
       /* Product: '<S4>/Matrix Multiply1' incorporates:
        *  Math: '<S4>/Transpose'
        */
-      rtb_Transpose_tmp_0[count] = au * rtb_TransferFcn4 + bv;
+      rtb_Transpose_tmp_0[count] = cosprev * rtb_TransferFcn4 + tmp;
     }
 
     /* MATLABSystem: '<S3>/IMU1' incorporates:
      *  MATLABSystem: '<S3>/Coordinate Transformation Conversion1'
      */
     UAV_Dynamics_SystemCore_step(&UAV_Dynamics_DW.obj, rtb_Transpose_tmp_0,
-      rtb_Transpose_tmp_1, rtb_CoordinateTransformationCon, UAV_Dynamics_Y.Acc,
-      UAV_Dynamics_Y.Gyro, UAV_Dynamics_Y.Mag);
+      rtb_Transpose_tmp_1,
+      UAV_Dynamics_B.CoordinateTransformationConv_pn.CoordinateTransformationConve_b,
+      UAV_Dynamics_Y.Acc, UAV_Dynamics_Y.Gyro, UAV_Dynamics_Y.Mag);
 
     /* Outport: '<Root>/Acc' incorporates:
      *  Gain: '<S3>/Gain'
@@ -5127,12 +4875,14 @@ void UAV_Dynamics_step(void)
   /* Switch: '<S56>/Switch' incorporates:
    *  Constant: '<S56>/Constant'
    */
-  if (rtb_ixj > 0.0) {
+  if (rtb_ixk > 0.0) {
     /* Saturate: '<S56>/Saturation1' */
-    if (rtb_ixk > 0.3490658503988659) {
-      rtb_ixk = 0.3490658503988659;
-    } else if (rtb_ixk < -0.3490658503988659) {
-      rtb_ixk = -0.3490658503988659;
+    if (VectorConcatenate[2] > 0.3490658503988659) {
+      rtb_fcn3 = 0.3490658503988659;
+    } else if (VectorConcatenate[2] < -0.3490658503988659) {
+      rtb_fcn3 = -0.3490658503988659;
+    } else {
+      rtb_fcn3 = VectorConcatenate[2];
     }
 
     /* Sum: '<S56>/Add' incorporates:
@@ -5140,24 +4890,26 @@ void UAV_Dynamics_step(void)
      *  Integrator: '<S7>/p,q,r '
      *  Saturate: '<S56>/Saturation1'
      */
-    gndSpeed = 2.0 * rtb_ixk + UAV_Dynamics_X.pqr_CSTATE[0];
+    rtb_jxi = 2.0 * rtb_fcn3 + UAV_Dynamics_X.pqr_CSTATE[0];
 
     /* Saturate: '<S56>/Saturation' incorporates:
      *  Gain: '<S56>/Gain2'
      */
-    if (gndSpeed > 0.1) {
+    if (rtb_jxi > 0.1) {
       rtb_Sum_ha[0] = -0.1;
-    } else if (gndSpeed < -0.1) {
+    } else if (rtb_jxi < -0.1) {
       rtb_Sum_ha[0] = 0.1;
     } else {
-      rtb_Sum_ha[0] = -gndSpeed;
+      rtb_Sum_ha[0] = -rtb_jxi;
     }
 
     /* Saturate: '<S56>/Saturation1' */
-    if (rtb_fcn3 > 0.3490658503988659) {
+    if (VectorConcatenate[1] > 0.3490658503988659) {
       rtb_fcn3 = 0.3490658503988659;
-    } else if (rtb_fcn3 < -0.3490658503988659) {
+    } else if (VectorConcatenate[1] < -0.3490658503988659) {
       rtb_fcn3 = -0.3490658503988659;
+    } else {
+      rtb_fcn3 = VectorConcatenate[1];
     }
 
     /* Sum: '<S56>/Add' incorporates:
@@ -5165,17 +4917,17 @@ void UAV_Dynamics_step(void)
      *  Integrator: '<S7>/p,q,r '
      *  Saturate: '<S56>/Saturation1'
      */
-    gndSpeed = 2.0 * rtb_fcn3 + UAV_Dynamics_X.pqr_CSTATE[1];
+    rtb_jxi = 2.0 * rtb_fcn3 + UAV_Dynamics_X.pqr_CSTATE[1];
 
     /* Saturate: '<S56>/Saturation' incorporates:
      *  Gain: '<S56>/Gain2'
      */
-    if (gndSpeed > 0.1) {
+    if (rtb_jxi > 0.1) {
       rtb_Sum_ha[1] = -0.1;
-    } else if (gndSpeed < -0.1) {
+    } else if (rtb_jxi < -0.1) {
       rtb_Sum_ha[1] = 0.1;
     } else {
-      rtb_Sum_ha[1] = -gndSpeed;
+      rtb_Sum_ha[1] = -rtb_jxi;
     }
 
     /* Product: '<S56>/Product' incorporates:
@@ -5185,15 +4937,15 @@ void UAV_Dynamics_step(void)
      *  Trigonometry: '<S61>/Tanh'
      *  UnaryMinus: '<S56>/Unary Minus'
      */
-    gndSpeed = -(tanh(5.0 * UAV_Dynamics_X.pqr_CSTATE[2]) * 0.025) * rtb_ixj;
+    rtb_jxi = -(tanh(5.0 * UAV_Dynamics_X.pqr_CSTATE[2]) * 0.025) * rtb_ixk;
 
     /* Saturate: '<S56>/Saturation2' */
-    if (gndSpeed > 0.1) {
+    if (rtb_jxi > 0.1) {
       rtb_Sum_ha[2] = 0.1;
-    } else if (gndSpeed < -0.1) {
+    } else if (rtb_jxi < -0.1) {
       rtb_Sum_ha[2] = -0.1;
     } else {
-      rtb_Sum_ha[2] = gndSpeed;
+      rtb_Sum_ha[2] = rtb_jxi;
     }
 
     /* End of Saturate: '<S56>/Saturation2' */
@@ -5208,14 +4960,14 @@ void UAV_Dynamics_step(void)
   /* Integrator: '<S7>/p,q,r ' incorporates:
    *  Product: '<S44>/Product'
    */
-  rtb_kxi = UAV_Dynamics_X.pqr_CSTATE[1];
-  rtb_jxi = UAV_Dynamics_X.pqr_CSTATE[0];
-  rtb_TransferFcn = UAV_Dynamics_X.pqr_CSTATE[2];
+  rtb_TransferFcn3 = UAV_Dynamics_X.pqr_CSTATE[1];
+  rtb_TransferFcn2 = UAV_Dynamics_X.pqr_CSTATE[0];
+  rtb_kxi = UAV_Dynamics_X.pqr_CSTATE[2];
   for (count = 0; count <= 0; count += 2) {
     /* Sum: '<S9>/Add1' */
-    tmp_3 = _mm_loadu_pd(&c[count]);
+    tmp_3 = _mm_loadu_pd(&rtb_netM[count]);
     tmp_6 = _mm_loadu_pd(&rtb_Sum_ha[count]);
-    _mm_storeu_pd(&c[count], _mm_add_pd(tmp_3, tmp_6));
+    _mm_storeu_pd(&rtb_netM[count], _mm_add_pd(tmp_3, tmp_6));
 
     /* Selector: '<S11>/Selector1' incorporates:
      *  Product: '<S45>/Product'
@@ -5224,7 +4976,7 @@ void UAV_Dynamics_step(void)
     tmp_3 = _mm_loadu_pd(&UAV_Dynamics_ConstB.Selector1[count + 3]);
 
     /* Integrator: '<S7>/p,q,r ' */
-    tmp_6 = _mm_set1_pd(rtb_kxi);
+    tmp_6 = _mm_set1_pd(rtb_TransferFcn3);
 
     /* Selector: '<S11>/Selector1' incorporates:
      *  Sum: '<S9>/Add1'
@@ -5232,7 +4984,7 @@ void UAV_Dynamics_step(void)
     tmp_4 = _mm_loadu_pd(&UAV_Dynamics_ConstB.Selector1[count]);
 
     /* Integrator: '<S7>/p,q,r ' */
-    tmp_5 = _mm_set1_pd(rtb_jxi);
+    tmp_5 = _mm_set1_pd(rtb_TransferFcn2);
 
     /* Selector: '<S11>/Selector1' incorporates:
      *  Product: '<S45>/Product'
@@ -5241,7 +4993,7 @@ void UAV_Dynamics_step(void)
     tmp_7 = _mm_loadu_pd(&UAV_Dynamics_ConstB.Selector1[count + 6]);
 
     /* Integrator: '<S7>/p,q,r ' */
-    tmp_1 = _mm_set1_pd(rtb_TransferFcn);
+    tmp_1 = _mm_set1_pd(rtb_kxi);
 
     /* Product: '<S45>/Product' incorporates:
      *  Sum: '<S9>/Add1'
@@ -5268,24 +5020,25 @@ void UAV_Dynamics_step(void)
 
   for (count = 2; count < 3; count++) {
     /* Sum: '<S9>/Add1' */
-    c[count] += rtb_Sum_ha[count];
+    rtb_netM[count] += rtb_Sum_ha[count];
 
     /* Product: '<S45>/Product' incorporates:
      *  Integrator: '<S7>/p,q,r '
      *  Selector: '<S11>/Selector1'
      */
     rtb_MatrixMultiply1[count] = (UAV_Dynamics_ConstB.Selector1[count + 3] *
-      rtb_kxi + UAV_Dynamics_ConstB.Selector1[count] * rtb_jxi) +
-      UAV_Dynamics_ConstB.Selector1[count + 6] * rtb_TransferFcn;
+      rtb_TransferFcn3 + UAV_Dynamics_ConstB.Selector1[count] * rtb_TransferFcn2)
+      + UAV_Dynamics_ConstB.Selector1[count + 6] * rtb_kxi;
 
     /* Product: '<S44>/Product' incorporates:
      *  Integrator: '<S7>/p,q,r '
      *  Selector: '<S11>/Selector'
      *  Sum: '<S43>/Sum'
      */
-    rtb_Sum_ha[count] = (UAV_Dynamics_ConstB.Selector[count + 3] * rtb_kxi +
-                         UAV_Dynamics_ConstB.Selector[count] * rtb_jxi) +
-      UAV_Dynamics_ConstB.Selector[count + 6] * rtb_TransferFcn;
+    rtb_Sum_ha[count] = (UAV_Dynamics_ConstB.Selector[count + 3] *
+                         rtb_TransferFcn3 + UAV_Dynamics_ConstB.Selector[count] *
+                         rtb_TransferFcn2) + UAV_Dynamics_ConstB.Selector[count
+      + 6] * rtb_kxi;
   }
 
   /* Product: '<S11>/Product2' incorporates:
@@ -5301,21 +5054,23 @@ void UAV_Dynamics_step(void)
    *  Sum: '<S11>/Sum2'
    *  Sum: '<S43>/Sum'
    */
-  c_0[0] = (c[0] - rtb_MatrixMultiply1[0]) - (UAV_Dynamics_X.pqr_CSTATE[1] *
-    rtb_Sum_ha[2] - rtb_Sum_ha[1] * UAV_Dynamics_X.pqr_CSTATE[2]);
-  c_0[1] = (c[1] - rtb_MatrixMultiply1[1]) - (rtb_Sum_ha[0] *
-    UAV_Dynamics_X.pqr_CSTATE[2] - UAV_Dynamics_X.pqr_CSTATE[0] * rtb_Sum_ha[2]);
-  c_0[2] = (c[2] - rtb_MatrixMultiply1[2]) - (UAV_Dynamics_X.pqr_CSTATE[0] *
-    rtb_Sum_ha[1] - rtb_Sum_ha[0] * UAV_Dynamics_X.pqr_CSTATE[1]);
-  rt_mrdivide_U1d1x3_U2d_9vOrDY9Z(c_0, UAV_Dynamics_ConstB.Selector2,
-    UAV_Dynamics_B.Product2);
+  VectorConcatenate[0] = (rtb_netM[0] - rtb_MatrixMultiply1[0]) -
+    (UAV_Dynamics_X.pqr_CSTATE[1] * rtb_Sum_ha[2] - rtb_Sum_ha[1] *
+     UAV_Dynamics_X.pqr_CSTATE[2]);
+  VectorConcatenate[1] = (rtb_netM[1] - rtb_MatrixMultiply1[1]) - (rtb_Sum_ha[0]
+    * UAV_Dynamics_X.pqr_CSTATE[2] - UAV_Dynamics_X.pqr_CSTATE[0] * rtb_Sum_ha[2]);
+  VectorConcatenate[2] = (rtb_netM[2] - rtb_MatrixMultiply1[2]) -
+    (UAV_Dynamics_X.pqr_CSTATE[0] * rtb_Sum_ha[1] - rtb_Sum_ha[0] *
+     UAV_Dynamics_X.pqr_CSTATE[1]);
+  rt_mrdivide_U1d1x3_U2d_9vOrDY9Z(VectorConcatenate,
+    UAV_Dynamics_ConstB.Selector2, UAV_Dynamics_B.Product2);
 
   /* Integrator: '<S7>/ub,vb,wb' incorporates:
    *  Math: '<S7>/Transpose'
    */
   rtb_fcn3 = UAV_Dynamics_X.ubvbwb_CSTATE[1];
   rtb_ixk = UAV_Dynamics_X.ubvbwb_CSTATE[0];
-  rtb_ixj = UAV_Dynamics_X.ubvbwb_CSTATE[2];
+  rtb_jxi = UAV_Dynamics_X.ubvbwb_CSTATE[2];
   for (count = 0; count <= 0; count += 2) {
     /* Math: '<S7>/Transpose' incorporates:
      *  Product: '<S17>/Product'
@@ -5330,7 +5085,7 @@ void UAV_Dynamics_step(void)
      */
     _mm_storeu_pd(&UAV_Dynamics_B.Product[count], _mm_add_pd(_mm_add_pd
       (_mm_mul_pd(tmp_3, _mm_set1_pd(rtb_fcn3)), _mm_mul_pd(tmp_6, _mm_set1_pd
-      (rtb_ixk))), _mm_mul_pd(tmp_4, _mm_set1_pd(rtb_ixj))));
+      (rtb_ixk))), _mm_mul_pd(tmp_4, _mm_set1_pd(rtb_jxi))));
   }
 
   for (count = 2; count < 3; count++) {
@@ -5340,7 +5095,7 @@ void UAV_Dynamics_step(void)
      */
     UAV_Dynamics_B.Product[count] = (rtb_Transpose_tmp[count + 3] * rtb_fcn3 +
       rtb_Transpose_tmp[count] * rtb_ixk) + rtb_Transpose_tmp[count + 6] *
-      rtb_ixj;
+      rtb_jxi;
   }
 
   if (rtmIsMajorTimeStep(UAV_Dynamics_M)) {
@@ -5404,114 +5159,119 @@ void UAV_Dynamics_step(void)
     }
 
     GPSSensorBase_stepRandomStream(&UAV_Dynamics_DW.obj_g, rtb_Sum_ha);
-    c[0] = rtb_Sum_ha[0] * UAV_Dynamics_DW.obj_g.pSigmaScaled[0];
-    c[1] = rtb_Sum_ha[1] * UAV_Dynamics_DW.obj_g.pSigmaScaled[1];
-    c[2] = rtb_Sum_ha[2] * UAV_Dynamics_DW.obj_g.pSigmaScaled[2];
-    rtb_ixj = UAV_Dynamics_DW.obj_g.pPositionErrorFilterNum;
-    rtb_ixj_k = UAV_Dynamics_DW.obj_g.pPositionErrorFilterDen[1];
+    rtb_netM[0] = rtb_Sum_ha[0] * UAV_Dynamics_DW.obj_g.pSigmaScaled[0];
+    rtb_netM[1] = rtb_Sum_ha[1] * UAV_Dynamics_DW.obj_g.pSigmaScaled[1];
+    rtb_netM[2] = rtb_Sum_ha[2] * UAV_Dynamics_DW.obj_g.pSigmaScaled[2];
+    rtb_fcn3 = UAV_Dynamics_DW.obj_g.pPositionErrorFilterNum;
+    rtb_ixk = UAV_Dynamics_DW.obj_g.pPositionErrorFilterDen[1];
     if ((!rtIsInf(UAV_Dynamics_DW.obj_g.pPositionErrorFilterDen[0])) &&
         (!rtIsNaN(UAV_Dynamics_DW.obj_g.pPositionErrorFilterDen[0])) &&
         (!(UAV_Dynamics_DW.obj_g.pPositionErrorFilterDen[0] == 0.0)) &&
         (UAV_Dynamics_DW.obj_g.pPositionErrorFilterDen[0] != 1.0)) {
-      rtb_ixj = UAV_Dynamics_DW.obj_g.pPositionErrorFilterNum /
+      rtb_fcn3 = UAV_Dynamics_DW.obj_g.pPositionErrorFilterNum /
         UAV_Dynamics_DW.obj_g.pPositionErrorFilterDen[0];
-      rtb_ixj_k = UAV_Dynamics_DW.obj_g.pPositionErrorFilterDen[1] /
+      rtb_ixk = UAV_Dynamics_DW.obj_g.pPositionErrorFilterDen[1] /
         UAV_Dynamics_DW.obj_g.pPositionErrorFilterDen[0];
     }
 
-    rtb_kxi = UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[0];
-    rtb_fcn3 = UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[1];
-    rtb_ixk = UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[2];
-    rtb_kxi += c[0] * rtb_ixj;
-    rtb_fcn3 += c[1] * rtb_ixj;
-    rtb_ixk += c[2] * rtb_ixj;
-    UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[0] = -rtb_kxi * rtb_ixj_k;
-    UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[1] = -rtb_fcn3 * rtb_ixj_k;
-    UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[2] = -rtb_ixk * rtb_ixj_k;
-    gndSpeed = sqrt(UAV_Dynamics_B.Product[0] * UAV_Dynamics_B.Product[0] +
-                    UAV_Dynamics_B.Product[1] * UAV_Dynamics_B.Product[1]);
+    VectorConcatenate[0] = UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[0];
+    VectorConcatenate[1] = UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[1];
+    VectorConcatenate[2] = UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[2];
+    VectorConcatenate[0] += rtb_netM[0] * rtb_fcn3;
+    VectorConcatenate[1] += rtb_netM[1] * rtb_fcn3;
+    VectorConcatenate[2] += rtb_netM[2] * rtb_fcn3;
+    UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[0] = -VectorConcatenate[0] *
+      rtb_ixk;
+    UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[1] = -VectorConcatenate[1] *
+      rtb_ixk;
+    UAV_Dynamics_DW.obj_g.pPositionErrorFilterStates[2] = -VectorConcatenate[2] *
+      rtb_ixk;
+    rtb_TransferFcn4 = sqrt(UAV_Dynamics_B.Product[0] * UAV_Dynamics_B.Product[0]
+      + UAV_Dynamics_B.Product[1] * UAV_Dynamics_B.Product[1]);
     GPSSensorBase_stepRandomStream(&UAV_Dynamics_DW.obj_g, rtb_Sum_ha);
     rtb_Sum_ha[0] *= UAV_Dynamics_DW.obj_g.VelocityAccuracy;
     rtb_Sum_ha[1] *= UAV_Dynamics_DW.obj_g.VelocityAccuracy;
     rtb_Sum_ha[2] *= UAV_Dynamics_DW.obj_g.VelocityAccuracy;
-    rtb_TransferFcn = UAV_Dynamics_DW.obj_g.VelocityAccuracy / gndSpeed;
-    if (!(gndSpeed > 0.0)) {
-      rtb_TransferFcn = 360.0;
-      rtb_ixj_k = UAV_Dynamics_RandStream_rand_p(UAV_Dynamics_DW.obj_g.pStream);
+    tmp = UAV_Dynamics_DW.obj_g.VelocityAccuracy / rtb_TransferFcn4;
+    if (!(rtb_TransferFcn4 > 0.0)) {
+      tmp = 360.0;
+      rtb_jxi = UAV_Dynamics_RandStream_rand_p(UAV_Dynamics_DW.obj_g.pStream);
     } else {
       nt = UAV_Dynamics_DW.obj_g.pStream->NtMethod;
       if (nt == ziggurat) {
         obj = UAV_Dynamics_DW.obj_g.pStream->Generator;
-        rtb_ixj_k = UAV_Dynami_mt19937ar_mtziggurat(obj);
+        rtb_jxi = UAV_Dynami_mt19937ar_mtziggurat(obj);
       } else if (UAV_Dynamics_DW.obj_g.pStream->NtMethod == ziggurat) {
-        rtb_ixj_k = UAV_RandStream_zigguratGenrandn
-          (UAV_Dynamics_DW.obj_g.pStream);
+        rtb_jxi = UAV_RandStream_zigguratGenrandn(UAV_Dynamics_DW.obj_g.pStream);
       } else if (UAV_Dynamics_DW.obj_g.pStream->NtMethod == polar) {
-        rtb_ixj_k = UAV_Dy_RandStream_polarGenrandn
-          (UAV_Dynamics_DW.obj_g.pStream);
+        rtb_jxi = UAV_Dy_RandStream_polarGenrandn(UAV_Dynamics_DW.obj_g.pStream);
       } else {
-        rtb_ixj_k = UA_RandStream_inversionGenrandn
-          (UAV_Dynamics_DW.obj_g.pStream);
+        rtb_jxi = UA_RandStream_inversionGenrandn(UAV_Dynamics_DW.obj_g.pStream);
       }
     }
 
-    rtb_ixj_k *= rtb_TransferFcn;
-    rtb_kxi += UAV_Dynamics_X.xeyeze_CSTATE[0];
-    rtb_fcn3 += UAV_Dynamics_X.xeyeze_CSTATE[1];
-    rtb_ixk += UAV_Dynamics_X.xeyeze_CSTATE[2];
+    rtb_jxi *= tmp;
+    VectorConcatenate[0] += UAV_Dynamics_X.xeyeze_CSTATE[0];
+    VectorConcatenate[1] += UAV_Dynamics_X.xeyeze_CSTATE[1];
+    VectorConcatenate[2] += UAV_Dynamics_X.xeyeze_CSTATE[2];
 
     /* Start for MATLABSystem: '<S2>/GPS' */
-    rtb_jxi = UAV_Dynamics_cosd(47.397742);
-    rtb_TransferFcn = UAV_Dynamics_sind(47.397742);
-    au = UAV_Dynamics_cosd(8.545594);
-    bv = UAV_Dynamics_sind(8.545594);
+    rtb_TransferFcn3 = UAV_Dynamics_cosd(47.397742);
+    rtb_TransferFcn2 = UAV_Dynamics_sind(47.397742);
+    rtb_kxi = UAV_Dynamics_cosd(8.545594);
+    cosprev = UAV_Dynamics_sind(8.545594);
 
     /* MATLABSystem: '<S2>/GPS' */
-    rtb_TransferFcn4 = 6.378137E+6 / sqrt(1.0 - rtb_TransferFcn *
-      rtb_TransferFcn * 0.0066943799901413165);
-    rtb_ixj = (rtb_TransferFcn4 + 488.0) * rtb_jxi;
-    tmp = rtb_jxi * -rtb_ixk - rtb_TransferFcn * rtb_kxi;
-    c[0] = (au * tmp - bv * rtb_fcn3) + rtb_ixj * au;
-    c[1] = (bv * tmp + au * rtb_fcn3) + rtb_ixj * bv;
-    c[2] = (rtb_TransferFcn4 * 0.99330562000985867 + 488.0) * rtb_TransferFcn +
-      (rtb_TransferFcn * -rtb_ixk + rtb_jxi * rtb_kxi);
-    rtb_ixj = rt_hypotd_snf(c[0], c[1]);
-    rtb_ixk = 6.378137E+6 * rtb_ixj;
-    rtb_TransferFcn4 = (42841.311513313565 / rt_hypotd_snf(rtb_ixj, c[2]) + 1.0)
-      * (6.3567523142451793E+6 * c[2]);
+    rtb_fcn3 = 6.378137E+6 / sqrt(1.0 - rtb_TransferFcn2 * rtb_TransferFcn2 *
+      0.0066943799901413165);
+    rtb_ixk = (rtb_fcn3 + 488.0) * rtb_TransferFcn3;
+    tmp = rtb_TransferFcn3 * -VectorConcatenate[2] - rtb_TransferFcn2 *
+      VectorConcatenate[0];
+    rtb_netM[0] = (rtb_kxi * tmp - cosprev * VectorConcatenate[1]) + rtb_ixk *
+      rtb_kxi;
+    rtb_netM[1] = (cosprev * tmp + rtb_kxi * VectorConcatenate[1]) + rtb_ixk *
+      cosprev;
+    rtb_netM[2] = (rtb_fcn3 * 0.99330562000985867 + 488.0) * rtb_TransferFcn2 +
+      (rtb_TransferFcn2 * -VectorConcatenate[2] + rtb_TransferFcn3 *
+       VectorConcatenate[0]);
+    rtb_ixk = rt_hypotd_snf(rtb_netM[0], rtb_netM[1]);
+    rtb_TransferFcn3 = 6.378137E+6 * rtb_ixk;
+    rtb_TransferFcn2 = (42841.311513313565 / rt_hypotd_snf(rtb_ixk, rtb_netM[2])
+                        + 1.0) * (6.3567523142451793E+6 * rtb_netM[2]);
 
     /* Start for MATLABSystem: '<S2>/GPS' */
-    if (rtIsNaN(rtb_ixk)) {
+    if (rtIsNaN(rtb_TransferFcn3)) {
       rtb_fcn3 = (rtNaN);
     } else {
-      rtb_fcn3 = (rtb_ixk > 0.0);
+      rtb_fcn3 = (rtb_TransferFcn3 > 0.0);
     }
 
     /* MATLABSystem: '<S2>/GPS' */
-    rtb_kxi = rtb_fcn3 / rt_hypotd_snf(1.0, rtb_TransferFcn4 / rtb_ixk);
+    rtb_kxi = rtb_fcn3 / rt_hypotd_snf(1.0, rtb_TransferFcn2 / rtb_TransferFcn3);
 
     /* Start for MATLABSystem: '<S2>/GPS' */
-    if (rtIsNaN(rtb_TransferFcn4)) {
+    if (rtIsNaN(rtb_TransferFcn2)) {
       rtb_fcn3 = (rtNaN);
-    } else if (rtb_TransferFcn4 < 0.0) {
+    } else if (rtb_TransferFcn2 < 0.0) {
       rtb_fcn3 = -1.0;
     } else {
-      rtb_fcn3 = (rtb_TransferFcn4 > 0.0);
+      rtb_fcn3 = (rtb_TransferFcn2 > 0.0);
     }
 
     /* MATLABSystem: '<S2>/GPS' incorporates:
      *  Reshape: '<S2>/Reshape1'
      */
-    rtb_fcn3 /= rt_hypotd_snf(1.0, rtb_ixk / rtb_TransferFcn4);
+    rtb_fcn3 /= rt_hypotd_snf(1.0, rtb_TransferFcn3 / rtb_TransferFcn2);
     count = 0;
     iterate = true;
     while (iterate && (count < 5)) {
-      rtb_jxi = rtb_kxi;
-      rtb_TransferFcn = rtb_fcn3;
-      rtb_ixk = rtb_ixj - 42697.672707179969 * rt_powd_snf(rtb_kxi, 3.0);
-      rtb_TransferFcn4 = 42841.311513313565 * rt_powd_snf(rtb_fcn3, 3.0) + c[2];
-      au = 6.378137E+6 * rtb_ixk;
-      bv = 6.3567523142451793E+6 * rtb_TransferFcn4;
+      cosprev = rtb_kxi;
+      tmp = rtb_fcn3;
+      rtb_TransferFcn3 = rtb_ixk - 42697.672707179969 * rt_powd_snf(rtb_kxi, 3.0);
+      rtb_TransferFcn2 = 42841.311513313565 * rt_powd_snf(rtb_fcn3, 3.0) +
+        rtb_netM[2];
+      au = 6.378137E+6 * rtb_TransferFcn3;
+      bv = 6.3567523142451793E+6 * rtb_TransferFcn2;
       if (rtIsNaN(au)) {
         rtb_fcn3 = (rtNaN);
       } else if (au < 0.0) {
@@ -5530,48 +5290,58 @@ void UAV_Dynamics_step(void)
       }
 
       rtb_fcn3 /= rt_hypotd_snf(1.0, au / bv);
-      iterate = (rt_hypotd_snf(rtb_kxi - rtb_jxi, rtb_fcn3 - rtb_TransferFcn) >
+      iterate = (rt_hypotd_snf(rtb_kxi - cosprev, rtb_fcn3 - tmp) >
                  2.2204460492503131E-16);
       count++;
     }
 
-    rtb_fcn3 = 57.295779513082323 * rt_atan2d_snf(rtb_TransferFcn4, rtb_ixk);
-    rtb_ixk = UAV_Dynamics_sind(rtb_fcn3);
-    rtb_TransferFcn4 = 6.378137E+6 / sqrt(1.0 - rtb_ixk * rtb_ixk *
+    rtb_TransferFcn3 = 57.295779513082323 * rt_atan2d_snf(rtb_TransferFcn2,
+      rtb_TransferFcn3);
+    rtb_TransferFcn2 = UAV_Dynamics_sind(rtb_TransferFcn3);
+    rtb_fcn3 = 6.378137E+6 / sqrt(1.0 - rtb_TransferFcn2 * rtb_TransferFcn2 *
       0.0066943799901413165);
     UAV_Dynamics_Y.GndSpeed = sqrt(rtb_Sum_ha[0] * rtb_Sum_ha[0] + rtb_Sum_ha[1]
-      * rtb_Sum_ha[1]) + gndSpeed;
-    rtb_ixj_k += 57.295779513082323 * rt_atan2d_snf(UAV_Dynamics_B.Product[1],
+      * rtb_Sum_ha[1]) + rtb_TransferFcn4;
+    rtb_jxi += 57.295779513082323 * rt_atan2d_snf(UAV_Dynamics_B.Product[1],
       UAV_Dynamics_B.Product[0]);
-    iterate = (rtb_ixj_k > 0.0);
-    gndSpeed = rtb_ixj_k;
-    if (rtIsNaN(rtb_ixj_k) || rtIsInf(rtb_ixj_k)) {
-      rtb_ixj_k = (rtNaN);
-    } else if (rtb_ixj_k == 0.0) {
-      rtb_ixj_k = 0.0;
+    iterate = (rtb_jxi > 0.0);
+    rtb_TransferFcn4 = rtb_jxi;
+    if (rtIsNaN(rtb_jxi) || rtIsInf(rtb_jxi)) {
+      rtb_jxi = (rtNaN);
+    } else if (rtb_jxi == 0.0) {
+      rtb_jxi = 0.0;
     } else {
-      rtb_ixj_k = fmod(rtb_ixj_k, 360.0);
-      if (rtb_ixj_k == 0.0) {
-        rtb_ixj_k = 0.0;
-      } else if (gndSpeed < 0.0) {
-        rtb_ixj_k += 360.0;
+      rtb_jxi = fmod(rtb_jxi, 360.0);
+      if (rtb_jxi == 0.0) {
+        rtb_jxi = 0.0;
+      } else if (rtb_TransferFcn4 < 0.0) {
+        rtb_jxi += 360.0;
       }
     }
 
-    if ((rtb_ixj_k == 0.0) && iterate) {
-      rtb_ixj_k = 360.0;
+    UAV_Dynamics_Y.Course = rtb_jxi;
+    if ((rtb_jxi == 0.0) && iterate) {
+      UAV_Dynamics_Y.Course = 360.0;
     }
 
     UAV_Dynamics_Y.Velocity[0] = UAV_Dynamics_Y.GndSpeed * UAV_Dynamics_cosd
-      (rtb_ixj_k);
+      (UAV_Dynamics_Y.Course);
     UAV_Dynamics_Y.Velocity[1] = UAV_Dynamics_Y.GndSpeed * UAV_Dynamics_sind
-      (rtb_ixj_k);
+      (UAV_Dynamics_Y.Course);
     UAV_Dynamics_Y.Velocity[2] = UAV_Dynamics_B.Product[2] + rtb_Sum_ha[2];
-    UAV_Dynamics_Y.LLA[0] = rtb_fcn3;
-    UAV_Dynamics_Y.LLA[1] = 57.295779513082323 * rt_atan2d_snf(c[1], c[0]);
-    UAV_Dynamics_Y.LLA[2] = ((0.0066943799901413165 * rtb_TransferFcn4 * rtb_ixk
-      + c[2]) * rtb_ixk + rtb_ixj * UAV_Dynamics_cosd(rtb_fcn3)) -
-      rtb_TransferFcn4;
+    UAV_Dynamics_Y.LLA[0] = rtb_TransferFcn3;
+    UAV_Dynamics_Y.LLA[1] = 57.295779513082323 * rt_atan2d_snf(rtb_netM[1],
+      rtb_netM[0]);
+    UAV_Dynamics_Y.LLA[2] = ((0.0066943799901413165 * rtb_fcn3 *
+      rtb_TransferFcn2 + rtb_netM[2]) * rtb_TransferFcn2 + rtb_ixk *
+      UAV_Dynamics_cosd(rtb_TransferFcn3)) - rtb_fcn3;
+
+    /* Outport: '<Root>/posi_raw' incorporates:
+     *  Integrator: '<S7>/xe,ye,ze'
+     */
+    UAV_Dynamics_Y.posi_raw[0] = UAV_Dynamics_X.xeyeze_CSTATE[0];
+    UAV_Dynamics_Y.posi_raw[1] = UAV_Dynamics_X.xeyeze_CSTATE[1];
+    UAV_Dynamics_Y.posi_raw[2] = UAV_Dynamics_X.xeyeze_CSTATE[2];
 
     /* Gain: '<S1>/Gain1' incorporates:
      *  Gain: '<S1>/Gain2'
@@ -5595,7 +5365,7 @@ void UAV_Dynamics_step(void)
      *  Gain: '<S6>/Lapse Rate'
      *  Saturate: '<S6>/Limit  altitude  to troposhere'
      */
-    rtb_ixj = 288.15 - 0.0065 * rtb_fcn3;
+    rtb_jxi = 288.15 - 0.0065 * rtb_fcn3;
 
     /* Saturate: '<S6>/Limit  altitude  to Stratosphere' incorporates:
      *  Constant: '<S6>/Altitude of Troposphere'
@@ -5623,14 +5393,9 @@ void UAV_Dynamics_step(void)
      * About '<S6>/Stratosphere Model':
      *  Operator: exp
      */
-    UAV_Dynamics_Y.Pressure = rt_powd_snf(0.00347041471455839 * rtb_ixj,
-      5.2558756014667134) * 101325.0 * exp(1.0 / rtb_ixj * (0.034163191409533639
+    UAV_Dynamics_Y.Pressure = rt_powd_snf(0.00347041471455839 * rtb_jxi,
+      5.2558756014667134) * 101325.0 * exp(1.0 / rtb_jxi * (0.034163191409533639
       * rtb_fcn3));
-
-    /* Outport: '<Root>/Course' incorporates:
-     *  MATLABSystem: '<S2>/GPS'
-     * */
-    UAV_Dynamics_Y.Course = rtb_ixj_k;
   }
 
   if (rtmIsMajorTimeStep(UAV_Dynamics_M)) {
@@ -5887,6 +5652,10 @@ void UAV_Dynamics_initialize(void)
     UAV_Dynamics_DW.RandSeed = 655360U;
     UAV_Dynamics_DW.NextOutput = rt_nrand_Upu32_Yd_f_pw_snf
       (&UAV_Dynamics_DW.RandSeed) * 100.0;
+    CoordinateTransformationCo_Init
+      (&UAV_Dynamics_DW.CoordinateTransformationConv_pn);
+    CoordinateTransformationCo_Init
+      (&UAV_Dynamics_DW.CoordinateTransformationConve_p);
 
     /* Start for MATLABSystem: '<S3>/IMU1' */
     UAV_Dynamics_DW.obj.MagneticFieldNED[0] = 27.555;

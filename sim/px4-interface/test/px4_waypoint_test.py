@@ -54,32 +54,42 @@ def mission_waypoints_config(master, wp1, wp2):
     # Wait for MISSION_ACK
     ack = master.recv_match(type=["MISSION_ACK", "MISSION_ACK"], blocking=True, timeout=5)
 
-class TestPX4WaypointsMission(unittest.TestCase):
+class TestPX4WaypointsMission(unittest.TestCase):   
+
     def test_fdm_init_and_step(self):
 
-        # 1. Create plugin model (NO PX4 NEEDED)
+        #setup
         px4 = PX4PluginModel()
-
-        # 2. Load shared library
-        px4.setup_fdm()   # <-- should print from libfdm.c
+        px4.initialize_connection()
+        px4.setup_fdm()   # <-- load shared lib (libfdm.c)
 
         # 3. Set dummy motor commands
         px4.fdm_input.motor_commands[:] = (0.2, 0.2, 0.2, 0.2)
         px4.fdm_input.delta_time = px4.dt
+        
+        t_end = time.time() + 1000  # Run for 1000 seconds to make sure QGC going to show "ready to fly" state
+        while time.time() < t_end:
 
-        # 4. Run ONE FDM step
-        px4.fdm_lib.fdm_step(
-            byref(px4.fdm_input),
-            byref(px4.fdm_output)
-        )
+            # creates connection to QGC
+            px4.send_heartbeat()
 
-        # Print the velocity to confirm C → Python works
-        print("[py] velocity:",
-              px4.fdm_output.velocity_ned[0],
-              px4.fdm_output.velocity_ned[1],
-              px4.fdm_output.velocity_ned[2])
+            #effect FDM step
+            px4.fdm_lib.fdm_step(byref(px4.fdm_input),byref(px4.fdm_output))
 
-        # test passes if no crash
+            print("ACC:", px4.fdm_output.acc[0], px4.fdm_output.acc[1], px4.fdm_output.acc[2])
+            print("GYRO:", px4.fdm_output.angular_velocity[:])
+            print("MAG:", px4.fdm_output.mag[:])
+            print("LLA:", px4.fdm_output.lla[:])
+            print("VEL:", px4.fdm_output.velocity_ned[:])
+            print("Q:", px4.fdm_output.attitude_quaternion[:])
+            print("PRESSURE:", px4.fdm_output.pressure)
+
+            
+            px4.send_hil_state_quaternion()
+            px4.send_hil_sensor()
+            px4.send_hil_gps()
+            time.sleep(px4.dt)
+        
         self.assertTrue(True)
 
 '''
@@ -126,41 +136,7 @@ class TestPX4WaypointsMission(unittest.TestCase):
 
 
 
-    ----
-    
-    def test_fdm_init_and_step(self):
-
-        # load model and shared lib
-        px4 = PX4PluginModel()
-        px4.setup_fdm()  
-
-        # set all motors to 20% throttle just for test
-        px4.fdm_input.motor_commands[:] = (0.2, 0.2, 0.2, 0.2)
-        px4.fdm_input.delta_time = px4.dt
-
-
-        t_end = time.time() + 1000  # Run for 1000 seconds to make sure QGC going to show "ready to fly" state
-        while time.time() < t_end:
-
-            # creates connection to QGC
-            px4.send_heartbeat()
-            msg = px4.recv_actuator_controls()
-
-            #effect FDM step
-            px4.fdm_lib.fdm_step(byref(px4.fdm_input),byref(px4.fdm_output))
-            
-            px4.send_hil_state_quaternion()
-            px4.send_hil_sensor()
-            px4.send_hil_gps()
-            time.sleep(px4.dt)
-
-
-        # Print the all the fdm output in the terminal
-        print("summery:",
-              px4.fdm_output)
-
-        # test passes if no crash
-        self.assertTrue(True)
+  
 
 
 '''

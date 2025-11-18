@@ -7,9 +7,9 @@
  *
  * Code generated for Simulink model 'UAV_Dynamics'.
  *
- * Model version                  : 4.5
+ * Model version                  : 4.12
  * Simulink Coder version         : 23.2 (R2023b) 01-Aug-2023
- * C/C++ source code generated on : Fri Oct 10 10:35:15 2025
+ * C/C++ source code generated on : Mon Nov 17 17:09:33 2025
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: Intel->x86-64 (Windows64)
