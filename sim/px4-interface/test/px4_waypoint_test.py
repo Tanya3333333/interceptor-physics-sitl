@@ -64,17 +64,23 @@ class TestPX4WaypointsMission(unittest.TestCase):
         px4.setup_fdm()   # <-- load shared lib (libfdm.c)
 
         # 3. Set dummy motor commands
-        px4.fdm_input.motor_commands[:] = (0.2, 0.2, 0.2, 0.2)
+        px4.fdm_input.motor_commands[:] = (0.9, 0.8, 0.76, 0.88)
         px4.fdm_input.delta_time = px4.dt
         
         t_end = time.time() + 1000  # Run for 1000 seconds to make sure QGC going to show "ready to fly" state
         while time.time() < t_end:
-
+            
+            t = int(time.time() * 1e6) # create a synchronized timestep for sending hil data to px4
+           
             # creates connection to QGC
             px4.send_heartbeat()
-
+            
             #effect FDM step
-            px4.fdm_lib.fdm_step(byref(px4.fdm_input),byref(px4.fdm_output))
+            msg = px4.recv_actuator_controls()
+            if msg: 
+                print ("HILD ACTUATOR: ", msg.controls[:4])
+                fdm_in = px4.actuator_to_fdm_input(msg)
+                px4.fdm_lib.fdm_step(byref(fdm_in),byref(px4.fdm_output))
 
             print("ACC:", px4.fdm_output.acc[0], px4.fdm_output.acc[1], px4.fdm_output.acc[2])
             print("GYRO:", px4.fdm_output.angular_velocity[:])
@@ -84,10 +90,11 @@ class TestPX4WaypointsMission(unittest.TestCase):
             print("Q:", px4.fdm_output.attitude_quaternion[:])
             print("PRESSURE:", px4.fdm_output.pressure)
 
+            # order of sending data matters
+            px4.send_hil_sensor(t)
+            px4.send_hil_state_quaternion(t)
+            px4.send_hil_gps(t)
             
-            px4.send_hil_state_quaternion()
-            px4.send_hil_sensor()
-            px4.send_hil_gps()
             time.sleep(px4.dt)
         
         self.assertTrue(True)
