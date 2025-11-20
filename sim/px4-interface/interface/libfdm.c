@@ -39,7 +39,6 @@ extern void UAV_Dynamics_step(void);
 extern ExtU_UAV_Dynamics_T UAV_Dynamics_U;
 extern ExtY_UAV_Dynamics_T UAV_Dynamics_Y;
 
-
 //calls the Simulink-generated init function
 void fdm_initialize(void) 
 {

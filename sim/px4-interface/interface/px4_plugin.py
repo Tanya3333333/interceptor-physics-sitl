@@ -8,7 +8,7 @@ from pymavlink import mavutil
 # --- Config ---
 PX4_SIM_IP = '127.0.0.1'
 PX4_SIM_PORT = 4560  # Standard tcp port for PX4 SIL
-SIM_LOOP_RATE_HZ = 50.0 # Simulation loop frequency
+SIM_LOOP_RATE_HZ = 250.0 # Simulation loop frequency
 DT = 1.0 / SIM_LOOP_RATE_HZ
 SHARED_LIB_PATH = 'sim/px4-interface/interface/libfdm.so' # Compiled C library name 
 SIM_SYS_ID = 3 # Simulator MAVLink System ID
@@ -55,8 +55,12 @@ class PX4PluginModel():
         self.fdm_lib = None
         self.fdm_input = FDM_Input()
         self.fdm_output = FDM_Output()
-        self._last_gps = 0
-        self.t = int(time.time() * 1e6) # create a synchronized timestep for sending hil data to px4
+
+        # Freq Related
+        self._last_gps_send = 0.0
+        self._last_state_send = 0.0
+        self.gps_interval = 1.0 / 2.0
+        self.state_interval = 1.0 / 50.0
 
     def initialize_connection(self, sys_id=SIM_SYS_ID, comp_id=SIM_COMP_ID):
         """Initiate the MAVLink TCP connection."""
@@ -92,8 +96,9 @@ class PX4PluginModel():
             return
         self.master.mav.heartbeat_send(
             mavutil.mavlink.MAV_TYPE_QUADROTOR,
-            mavutil.mavlink.MAV_AUTOPILOT_INVALID,
-            0, 0,
+            mavutil.mavlink.MAV_AUTOPILOT_GENERIC,
+            mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED | mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, 
+            0,
             mavutil.mavlink.MAV_STATE_ACTIVE
         )
 
@@ -112,20 +117,20 @@ class PX4PluginModel():
         return fdm_input
     
 
-    def send_hil_sensor(self):
+    def send_hil_sensor(self, t):
         if not self.master:
             return
         
         self.master.mav.hil_sensor_send(
-            self.t,
+            t,
 
-            int(self.fdm_output.acc[0]),
-            int(self.fdm_output.acc[1]),
-            int(self.fdm_output.acc[2]),
+            float(self.fdm_output.acc[0]),
+            float(self.fdm_output.acc[1]),
+            float(self.fdm_output.acc[2]),
 
-            int(self.fdm_output.gyro[0]),
-            int(self.fdm_output.gyro[1]),
-            int(self.fdm_output.gyro[2]),
+            float(self.fdm_output.gyro[0]),
+            float(self.fdm_output.gyro[1]),
+            float(self.fdm_output.gyro[2]),
 
             float(self.fdm_output.mag[0])/100,
             float(self.fdm_output.mag[1])/100,
@@ -138,9 +143,8 @@ class PX4PluginModel():
             0xFFFF,                            # field update
             0                                  # sensor id
         )
- 
 
-    def send_hil_gps(self):
+    def send_hil_gps(self, t):
         """
         Used the pymav array structure to fill in the param: https://mavlink.io/en/messages/common.html#HIL_GPS
         id msg = 113
@@ -148,51 +152,60 @@ class PX4PluginModel():
         if not self.master:
             return
         
-        self.master.mav.hil_gps_send(
-            self.t,                                     # time_usec
-            
-            3,                                          # fix_type (3 = 3D GPS fix)
-            
-            int(self.fdm_output.lla[0] * 1e7),          #lat 
-            int(self.fdm_output.lla[1] * 1e7),          #lon
-            int(self.fdm_output.lla[2] * 1000),         # alt
-            
-            65535,                                      # eph (cm)
-            65535,                                      # epv (cm)
-            
-            int(abs(self.fdm_output.gnd_speed) * 100),  # vel (cm/s)
-            int(self.fdm_output.velocity_ned[0] * 100), #vn
-            int(self.fdm_output.velocity_ned[1] * 100), #ve
-            int(self.fdm_output.velocity_ned[2] * 100), #vd
-            
-            int(self.fdm_output.course_deg * 100),      # cog (cdeg)
+        now = time.time()
+        if now - self._last_gps_send < self.gps_interval:       # Send GPS at 2 Hz
+            return
+        self._last_gps_send = now
 
-            255,                                        # satellites_visible
-            0,                                          # gps id
-            0,                                          # yaw => TODO
+        self.master.mav.hil_gps_send(
+            t,                                                  # time_usec
+            
+            3,                                                  # fix_type (3 = 3D GPS fix)
+            
+            int(self.fdm_output.lla[0] * 1e7),                  #lat 
+            int(self.fdm_output.lla[1] * 1e7),                  #lon
+            int(self.fdm_output.lla[2] * 1000),                 # alt
+            
+            200,                                                # eph (cm)
+            200,                                                # epv (cm)
+            
+            int(abs(self.fdm_output.gnd_speed) * 100),          # vel (cm/s)
+            int(self.fdm_output.velocity_ned[0] * 100),         #vn
+            int(self.fdm_output.velocity_ned[1] * 100),         #ve
+            int(self.fdm_output.velocity_ned[2] * 100),         #vd
+            
+            65535, #int(self.fdm_output.course_deg * 100),      # cog (cdeg)
+
+            255,                                                # satellites_visible
+            0,                                                  # gps id
+            0,                                                  # yaw => TODO
         )
 
-
-    def send_hil_state_quaternion(self):
+    def send_hil_state_quaternion(self,t):
         """Converts FDM_Output to MAVLink HIL_STATE_QUATERNION and sends it.
             Fill in the Fields for HIL_STATE_QUATERNION (115): 
             https://mavlink.io/en/messages/common.html#HIL_STATE_QUATERNION
         """
         if not self.master:
             return
+        
+        now = time.time()
+        if now - self._last_state_send < self.state_interval:       # Send state q at 50 Hz
+            return
+        self._last_state_send = now
 
         # Quaternion (ctypes → float → tuple)
         attitude_quat_xyzw = (
-            float(self.fdm_output.attitude_quaternion[0]),  # w
-            float(self.fdm_output.attitude_quaternion[1]),  # x
-            float(self.fdm_output.attitude_quaternion[2]),  # y
-            float(self.fdm_output.attitude_quaternion[3])   # z
+            float(self.fdm_output.attitude_quaternion[0]),          # w
+            float(self.fdm_output.attitude_quaternion[1]),          # x
+            float(self.fdm_output.attitude_quaternion[2]),          # y
+            float(self.fdm_output.attitude_quaternion[3])           # z
         )
 
         # Send MAVLink message
         self.master.mav.hil_state_quaternion_send(
-            self.t,
-            
+            t,
+
             attitude_quat_xyzw,
 
             # Angular velocity (rad/s)
@@ -213,9 +226,8 @@ class PX4PluginModel():
             0,                                                      #ind_airspeed
             0,                                                      #true_airspeed,
 
-            # accelerations (mG)
+            # accelerations (mG -> MAVLINK specific)
             int((self.fdm_output.acc[0]/ 9.80665) * 1000),
             int((self.fdm_output.acc[1]/ 9.80665) * 1000),
             int((self.fdm_output.acc[2]/ 9.80665) * 1000)
         )
-    
