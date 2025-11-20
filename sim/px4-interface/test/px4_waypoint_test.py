@@ -54,7 +54,11 @@ def mission_waypoints_config(master, wp1, wp2):
     # Wait for MISSION_ACK
     ack = master.recv_match(type=["MISSION_ACK", "MISSION_ACK"], blocking=True, timeout=5)
 
-class TestPX4WaypointsMission(unittest.TestCase):   
+class TestPX4WaypointsMission(unittest.TestCase):    
+    def __init__(self):
+        self.hil_sensor_T = 0
+        pass
+
 
     def test_fdm_init_and_step(self):
 
@@ -67,18 +71,22 @@ class TestPX4WaypointsMission(unittest.TestCase):
         px4.fdm_input.motor_commands[:] = (0.9, 0.8, 0.76, 0.88)
         px4.fdm_input.delta_time = px4.dt
         
-        t_end = time.time() + 1000  # Run for 1000 seconds to make sure QGC going to show "ready to fly" state
-        while time.time() < t_end:
-            
-            t = int(time.time() * 1e6) # create a synchronized timestep for sending hil data to px4
+        t_end_sim = time.time() + 1000  # Run for 1000 seconds to make sure QGC going to show "ready to fly" state
+        while time.time() < t_end_sim:
            
             # creates connection to QGC
             px4.send_heartbeat()
             
             #effect FDM step
             msg = px4.recv_actuator_controls()
+
+            # frequency managment
+            current_hil_sensor_T = px4.send_hil_sensor.time_usec
+            current_hil_gps_T = px4.send_hil_gps.time_usec
+            current_hil_state_quaternion_T = px4.send_hil_state_quaternion.time_usec
+
             if msg: 
-                print ("HILD ACTUATOR: ", msg.controls[:4])
+                print ("HIL ACTUATOR: ", msg.controls[:4])
                 fdm_in = px4.actuator_to_fdm_input(msg)
                 px4.fdm_lib.fdm_step(byref(fdm_in),byref(px4.fdm_output))
 
@@ -91,9 +99,10 @@ class TestPX4WaypointsMission(unittest.TestCase):
             print("PRESSURE:", px4.fdm_output.pressure)
 
             # order of sending data matters
-            px4.send_hil_sensor(t)
-            px4.send_hil_state_quaternion(t)
-            px4.send_hil_gps(t)
+            if (current_hil_sensor_T - last_hil_sensor_T == 0.0045):
+                px4.send_hil_sensor()
+            px4.send_hil_state_quaternion()
+            px4.send_hil_gps()
             
             time.sleep(px4.dt)
         

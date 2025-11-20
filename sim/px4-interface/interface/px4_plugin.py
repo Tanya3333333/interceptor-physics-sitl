@@ -56,6 +56,7 @@ class PX4PluginModel():
         self.fdm_input = FDM_Input()
         self.fdm_output = FDM_Output()
         self._last_gps = 0
+        self.t = int(time.time() * 1e6) # create a synchronized timestep for sending hil data to px4
 
     def initialize_connection(self, sys_id=SIM_SYS_ID, comp_id=SIM_COMP_ID):
         """Initiate the MAVLink TCP connection."""
@@ -106,17 +107,17 @@ class PX4PluginModel():
         # 4 motor channels (the delta time is set later as its not a control channel)
         fdm_input = FDM_Input()
         for i in range(4):
-            fdm_input.motor_commands[i] = max(0.0, min(1.0, actuator_msg.controls[i])) # Clamping controls to [motor off, full throttle] for normalized motor commands
+            fdm_input.motor_commands[i] = max(0.0, min(1.0, float(actuator_msg.controls[i]))) # Clamping controls to [motor off, full throttle] for normalized motor commands
         fdm_input.delta_time = self.dt
         return fdm_input
     
 
-    def send_hil_sensor(self, t):
+    def send_hil_sensor(self):
         if not self.master:
             return
         
         self.master.mav.hil_sensor_send(
-            t,
+            self.t,
 
             int(self.fdm_output.acc[0]),
             int(self.fdm_output.acc[1]),
@@ -126,8 +127,8 @@ class PX4PluginModel():
             int(self.fdm_output.gyro[1]),
             int(self.fdm_output.gyro[2]),
 
-            float(self.fdm_output.mag[0]) /100,
-            float(self.fdm_output.mag[1]) /100,
+            float(self.fdm_output.mag[0])/100,
+            float(self.fdm_output.mag[1])/100,
             float(self.fdm_output.mag[2])/100,
 
             float(self.fdm_output.pressure)/ 100,   # dynamic baro (abs pressure)
@@ -139,21 +140,16 @@ class PX4PluginModel():
         )
  
 
-    def send_hil_gps(self, t):
+    def send_hil_gps(self):
         """
-        Used the pymav array structure to fill in the param: https://mavlink.io/en/messages/common.html 
+        Used the pymav array structure to fill in the param: https://mavlink.io/en/messages/common.html#HIL_GPS
         id msg = 113
         """
         if not self.master:
             return
         
-        now = time.time()
-        if now - self._last_gps < 1.0:                  # Send GPS at 1 Hz
-            return
-        self._last_gps = now
-
         self.master.mav.hil_gps_send(
-            t,                                          # time_usec
+            self.t,                                     # time_usec
             
             3,                                          # fix_type (3 = 3D GPS fix)
             
@@ -170,14 +166,14 @@ class PX4PluginModel():
             int(self.fdm_output.velocity_ned[2] * 100), #vd
             
             int(self.fdm_output.course_deg * 100),      # cog (cdeg)
-            
-            10,                                         # satellites_visible
+
+            255,                                        # satellites_visible
             0,                                          # gps id
             0,                                          # yaw => TODO
         )
 
 
-    def send_hil_state_quaternion(self,t):
+    def send_hil_state_quaternion(self):
         """Converts FDM_Output to MAVLink HIL_STATE_QUATERNION and sends it.
             Fill in the Fields for HIL_STATE_QUATERNION (115): 
             https://mavlink.io/en/messages/common.html#HIL_STATE_QUATERNION
@@ -195,8 +191,8 @@ class PX4PluginModel():
 
         # Send MAVLink message
         self.master.mav.hil_state_quaternion_send(
-            t,
-
+            self.t,
+            
             attitude_quat_xyzw,
 
             # Angular velocity (rad/s)
@@ -217,9 +213,9 @@ class PX4PluginModel():
             0,                                                      #ind_airspeed
             0,                                                      #true_airspeed,
 
-            # accelerations (mG -> MAVLINK specific)
-            int((self.fdm_output.acc[0] / 9.80665) * 1000),
-            int((self.fdm_output.acc[1] / 9.80665) * 1000),
-            int((self.fdm_output.acc[2] / 9.80665) * 1000)
+            # accelerations (mG)
+            int((self.fdm_output.acc[0]/ 9.80665) * 1000),
+            int((self.fdm_output.acc[1]/ 9.80665) * 1000),
+            int((self.fdm_output.acc[2]/ 9.80665) * 1000)
         )
     
