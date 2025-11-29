@@ -4,10 +4,9 @@
 #include <stdio.h>
 
 // --- i/o structure for fdm ---
-
 typedef struct {
     float motor_commands[4]; // 4 rotors 1, 2, 3, 4 normalized
-    float delta_time;        // Time step for the FDM integration
+    //float delta_time;        Time step for the FDM integration
 } FDM_Input;
 
 typedef struct {

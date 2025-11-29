@@ -6,10 +6,9 @@ from ctypes import *
 from pymavlink import mavutil
 
 # --- Config ---
-PX4_SIM_IP = '127.0.0.1'
-PX4_SIM_PORT = 4560  # Standard tcp port for PX4 SIL
-SIM_LOOP_RATE_HZ = 250.0 # Simulation loop frequency
-DT = 1.0 / SIM_LOOP_RATE_HZ
+SIM_LOOP_RATE_HZ = 100.0 # Simulation loop frequency
+DT_SIM = 1.0 / SIM_LOOP_RATE_HZ
+DT_GPS = 1.0/2.0
 SHARED_LIB_PATH = 'sim/px4-interface/interface/libfdm.so' # Compiled C library name 
 SIM_SYS_ID = 3 # Simulator MAVLink System ID
 SIM_COMP_ID = 222
@@ -18,8 +17,7 @@ SIM_COMP_ID = 222
 class FDM_Input(Structure):
     """Input struct for the C FDM."""
     _fields_ = [
-        ("motor_commands", c_float * 4),
-        ("delta_time", c_float),
+        ("motor_commands", c_float * 4)
     ]
 
 class FDM_Output(Structure):
@@ -37,30 +35,26 @@ class FDM_Output(Structure):
         ("lla", c_double * 3),
 
         ("gnd_speed", c_double),
-        ("course_deg", c_double),
+        ("course_deg", c_double)
     ]
 
 # --- Model ---
-class PX4PluginModel():
+class PX4InterfaceSILModel():
     """MAVLink HIL bridge to run FDM in the loop."""
-    def __init__(self, host=PX4_SIM_IP, port=PX4_SIM_PORT, sim_rate_hz=SIM_LOOP_RATE_HZ):
+    def __init__(self):
 
         # PX4 Connection Related
-        self.host = host
-        self.port = port
-        self.dt = 1.0 / sim_rate_hz
         self.master = None
 
         # FDM Related
         self.fdm_lib = None
         self.fdm_input = FDM_Input()
         self.fdm_output = FDM_Output()
-
+        
         # Freq Related
-        self._last_gps_send = 0.0
-        self._last_state_send = 0.0
-        self.gps_interval = 1.0 / 2.0
-        self.state_interval = 1.0 / 50.0
+        self.sensor_interval = int(1.0 / 250.0)
+        self.gps_interval = int(1.0 / 2.0) 
+        self.state_q_interval = int(1.0 / 50.0)
 
     def initialize_connection(self, sys_id=SIM_SYS_ID, comp_id=SIM_COMP_ID):
         """Initiate the MAVLink TCP connection."""
@@ -71,24 +65,11 @@ class PX4PluginModel():
         return self.master
 
     def close(self):
-        """Closes the MAVLink connection if TCP does not have data to read"""
+        """Closes the MAVLink connection - for safety purposes."""
         if self.master: 
             try: self.master.close()
             except: pass
             self.master = None
-
-    def setup_fdm(self):
-        """Loads the C FDM library and initialize it.
-        fdm_initialize and fdm_step are both exported c functions in the shared lib 
-        Here we first describe the signiture of the functions and then proceed with calling the initialization in the wrapper
-        """
-        self.fdm_lib = CDLL(SHARED_LIB_PATH) #load lib to get acess to exported c functions
-        self.fdm_lib.fdm_initialize.argtypes = [] # no expectations for the attribute of the loaded functions' arguments
-        self.fdm_lib.fdm_initialize.restype = None # attribute of loaded function's return value (return nothing)
-        self.fdm_lib.fdm_step.argtypes = [POINTER(FDM_Input), POINTER(FDM_Output)]
-        self.fdm_lib.fdm_step.restype = None
-
-        self.fdm_lib.fdm_initialize()
 
     def send_heartbeat(self):
         """Sends a MAVLink heartbeat message to PX4.""" 
@@ -102,21 +83,38 @@ class PX4PluginModel():
             mavutil.mavlink.MAV_STATE_ACTIVE
         )
 
+    def setup_fdm(self):
+        """Loads the C FDM library and initialize it.
+        fdm_initialize and fdm_step are both exported c functions in the shared lib 
+        Here, we first describe the signiture of the functions and then proceed with calling the initialization in the wrapper
+        """
+        self.fdm_lib = CDLL(SHARED_LIB_PATH) #load lib to get acess to exported c functions
+        self.fdm_lib.fdm_initialize.argtypes = [] # no expectations for the arguments to call function
+        self.fdm_lib.fdm_initialize.restype = None # expect no return from the function
+        self.fdm_lib.fdm_step.argtypes = [POINTER(FDM_Input), POINTER(FDM_Output)]
+        self.fdm_lib.fdm_step.restype = None
+
+        self.fdm_lib.fdm_initialize()
+
+        for i in range (4):
+            self.fdm_input.motor_commands[i] = 0.0
+        return self.fdm_input
+
+    def step_fdm(self, input):
+        return self.fdm_lib.fdm_step(byref(input),byref(self.fdm_output))
+
     def recv_actuator_controls(self):
         """Receives the HIL_ACTUATOR_CONTROLS message from PX4."""
         if not self.master: return None
-        return self.master.recv_match(type="HIL_ACTUATOR_CONTROLS", blocking=False) # Non-blocking receive for for RTOS so sim doesn't keep stoping 
-
-    def actuator_to_fdm_input(self, actuator_msg):
-        """Converts MAVLink ACTUATOR_CONTROLS to FDM_Input struct."""
-        # 4 motor channels (the delta time is set later as its not a control channel)
-        fdm_input = FDM_Input()
-        for i in range(4):
-            fdm_input.motor_commands[i] = max(0.0, min(1.0, float(actuator_msg.controls[i]))) # Clamping controls to [motor off, full throttle] for normalized motor commands
-        fdm_input.delta_time = self.dt
-        return fdm_input
+        return self.master.recv_match(type="HIL_ACTUATOR_CONTROLS", blocking=False) 
     
 
+    def actuator_to_fdm_input(self, actuator_msg):
+        """Converts MAVLink ACTUATOR_CONTROLS to FDM_Input struct and normalized motor commands"""
+        for i in range(4):
+                self.fdm_input.motor_commands[i] = max(0.0, min(1.0, float(actuator_msg.controls[i]))) # Clamp controls to be in a range between/equal to motor off and full throttle
+        return self.fdm_input
+    
     def send_hil_sensor(self, t):
         if not self.master:
             return
@@ -137,11 +135,11 @@ class PX4PluginModel():
             float(self.fdm_output.mag[2])/100,
 
             float(self.fdm_output.pressure)/ 100,   # dynamic baro (abs pressure)
-            0.0,                               # diff pressure
-            float(self.fdm_output.lla[2]),     # pressure alt
-            20.0,                              # temp
-            0xFFFF,                            # field update
-            0                                  # sensor id
+            0.0,                                    # diff pressure
+            float(self.fdm_output.lla[2]),          # pressure alt
+            20.0,                                   # temp
+            0xFFFF,                                 # field update
+            0                                       # sensor id
         )
 
     def send_hil_gps(self, t):
@@ -151,11 +149,6 @@ class PX4PluginModel():
         """
         if not self.master:
             return
-        
-        now = time.time()
-        if now - self._last_gps_send < self.gps_interval:       # Send GPS at 2 Hz
-            return
-        self._last_gps_send = now
 
         self.master.mav.hil_gps_send(
             t,                                                  # time_usec
@@ -166,17 +159,17 @@ class PX4PluginModel():
             int(self.fdm_output.lla[1] * 1e7),                  #lon
             int(self.fdm_output.lla[2] * 1000),                 # alt
             
-            200,                                                # eph (cm)
-            200,                                                # epv (cm)
+            int(0.8*100),                                                 # eph (cm)
+            int(1.0*100),                                                # epv (cm)
             
             int(abs(self.fdm_output.gnd_speed) * 100),          # vel (cm/s)
             int(self.fdm_output.velocity_ned[0] * 100),         #vn
             int(self.fdm_output.velocity_ned[1] * 100),         #ve
             int(self.fdm_output.velocity_ned[2] * 100),         #vd
             
-            65535, #int(self.fdm_output.course_deg * 100),      # cog (cdeg)
+            int(self.fdm_output.course_deg * 100),      # cog (cdeg)
 
-            255,                                                # satellites_visible
+            7,                                                  # satellites_visible
             0,                                                  # gps id
             0,                                                  # yaw => TODO
         )
@@ -188,11 +181,6 @@ class PX4PluginModel():
         """
         if not self.master:
             return
-        
-        now = time.time()
-        if now - self._last_state_send < self.state_interval:       # Send state q at 50 Hz
-            return
-        self._last_state_send = now
 
         # Quaternion (ctypes → float → tuple)
         attitude_quat_xyzw = (
