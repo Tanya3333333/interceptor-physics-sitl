@@ -1,6 +1,5 @@
 This is an active branch!
 
-Author: Tanya Hajipour
 Release date: Oct 2025
 
 ---- About the sim/px4-interface folder: 
