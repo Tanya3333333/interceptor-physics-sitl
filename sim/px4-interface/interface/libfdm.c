@@ -57,7 +57,7 @@ void fdm_step(const FDM_Input* in, FDM_Output* out)
         float u = in->motor_commands[i];
         if (u < 0.f) u = 0.f;
         if (u > 1.f) u = 1.f;
-        UAV_Dynamics_U.PWMInputs[i] = (double)u; // real_T/double in codegen
+        UAV_Dynamics_U.PWMInputs[i] = (double)u;
     }
 
     // advance one tick

@@ -1,7 +1,5 @@
-import sys
-import os
-import time
-import math
+import sys, os, time
+import numpy as np
 from ctypes import *
 from pymavlink import mavutil
 
@@ -9,7 +7,11 @@ from pymavlink import mavutil
 SIM_LOOP_RATE_HZ = 100.0 # Simulation loop frequency
 DT_SIM = 1.0 / SIM_LOOP_RATE_HZ
 DT_GPS = 1.0/2.0
-SHARED_LIB_PATH = 'sim/px4-interface/interface/libfdm.so' # Compiled C library name 
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SHARED_LIB_PATH = os.path.join(BASE_DIR, 'libfdm.so') # Compiled C library name
+
+
 SIM_SYS_ID = 3 # Simulator MAVLink System ID
 SIM_COMP_ID = 222
 
@@ -50,11 +52,7 @@ class PX4InterfaceSILModel():
         self.fdm_lib = None
         self.fdm_input = FDM_Input()
         self.fdm_output = FDM_Output()
-        
-        # Freq Related
-        self.sensor_interval = int(1.0 / 250.0)
-        self.gps_interval = int(1.0 / 2.0) 
-        self.state_q_interval = int(1.0 / 50.0)
+        self.last_actuator_msg = [0.0, 0,0, 0.0, 0.0]    
 
     def initialize_connection(self, sys_id=SIM_SYS_ID, comp_id=SIM_COMP_ID):
         """Initiate the MAVLink TCP connection."""
@@ -95,14 +93,7 @@ class PX4InterfaceSILModel():
         self.fdm_lib.fdm_step.restype = None
 
         self.fdm_lib.fdm_initialize()
-
-        for i in range (4):
-            self.fdm_input.motor_commands[i] = 0.0
-        return self.fdm_input
-
-    def step_fdm(self, input):
-        return self.fdm_lib.fdm_step(byref(input),byref(self.fdm_output))
-
+    
     def recv_actuator_controls(self):
         """Receives the HIL_ACTUATOR_CONTROLS message from PX4."""
         if not self.master: return None
@@ -111,8 +102,17 @@ class PX4InterfaceSILModel():
 
     def actuator_to_fdm_input(self, actuator_msg):
         """Converts MAVLink ACTUATOR_CONTROLS to FDM_Input struct and normalized motor commands"""
-        for i in range(4):
-                self.fdm_input.motor_commands[i] = max(0.0, min(1.0, float(actuator_msg.controls[i]))) # Clamp controls to be in a range between/equal to motor off and full throttle
+        if actuator_msg is None:
+            actuator_msg = self.last_actuator_msg
+        else:
+            cmnd_stored = []
+            for i in range(4): 
+                act = float(actuator_msg.controls[i])
+                act = max (0.0, min (1.0, act))
+                cmnd_stored.append(act)
+            self.last_actuator_msg = cmnd_stored
+
+        for i in range(4): self.fdm_input.motor_commands [i] = (self.last_actuator_msg[i])
         return self.fdm_input
     
     def send_hil_sensor(self, t):
@@ -137,8 +137,8 @@ class PX4InterfaceSILModel():
             float(self.fdm_output.pressure)/ 100,   # dynamic baro (abs pressure)
             0.0,                                    # diff pressure
             float(self.fdm_output.lla[2]),          # pressure alt
-            20.0,                                   # temp
-            0xFFFF,                                 # field update
+            25.0,                                   # temp
+            8191,                                 # field update
             0                                       # sensor id
         )
 
@@ -151,27 +151,25 @@ class PX4InterfaceSILModel():
             return
 
         self.master.mav.hil_gps_send(
-            t,                                                  # time_usec
-            
-            3,                                                  # fix_type (3 = 3D GPS fix)
-            
-            int(self.fdm_output.lla[0] * 1e7),                  #lat 
-            int(self.fdm_output.lla[1] * 1e7),                  #lon
+            t,                                                  # time_usec                                  
+            3,                                                  # fix type (3d gps)
+            int(self.fdm_output.lla[0] * 1e7),                  # lat 
+            int(self.fdm_output.lla[1] * 1e7),                  # lon
             int(self.fdm_output.lla[2] * 1000),                 # alt
             
-            int(0.8*100),                                                 # eph (cm)
-            int(1.0*100),                                                # epv (cm)
+            int(0.3*100),                                       # eph (cm)
+            int(0.4*100),                                       # epv (cm)
             
             int(abs(self.fdm_output.gnd_speed) * 100),          # vel (cm/s)
-            int(self.fdm_output.velocity_ned[0] * 100),         #vn
-            int(self.fdm_output.velocity_ned[1] * 100),         #ve
-            int(self.fdm_output.velocity_ned[2] * 100),         #vd
+            int(self.fdm_output.velocity_ned[0] * 100),         # vn
+            int(self.fdm_output.velocity_ned[1] * 100),         # ve
+            int(self.fdm_output.velocity_ned[2] * 100),         # vd
             
-            int(self.fdm_output.course_deg * 100),      # cog (cdeg)
+            int(self.fdm_output.course_deg * 100),              # cog (cdeg)
 
-            7,                                                  # satellites_visible
+            10,                                                 # satellites_visible
             0,                                                  # gps id
-            0,                                                  # yaw => TODO
+            0,                                                  # yaw
         )
 
     def send_hil_state_quaternion(self,t):
@@ -202,8 +200,8 @@ class PX4InterfaceSILModel():
             float(self.fdm_output.angular_velocity[2]),             # yaw
 
             # GPS reference (lat/lon/alt must be ints)
-            int(self.fdm_output.lla[0] * 1e7),                      #lat 
-            int(self.fdm_output.lla[1] * 1e7),                      #lon
+            int(self.fdm_output.lla[0] * 1e7),                      # lat 
+            int(self.fdm_output.lla[1] * 1e7),                      # lon
             int(self.fdm_output.lla[2] * 1000),                     # alt
 
             # Velocity: NED (m/s → cm/s → int)
@@ -211,8 +209,8 @@ class PX4InterfaceSILModel():
             int(self.fdm_output.velocity_ned[1] * 100),
             int(self.fdm_output.velocity_ned[2] * 100),
 
-            0,                                                      #ind_airspeed
-            0,                                                      #true_airspeed,
+            0,                                                      # ind_airspeed
+            0,                                                      # true_airspeed
 
             # accelerations (mG -> MAVLINK specific)
             int((self.fdm_output.acc[0]/ 9.80665) * 1000),
