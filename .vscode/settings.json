@@ -2,5 +2,8 @@
     "C_Cpp.errorSquiggles": "disabled",
     "files.associations": {
         "string.h": "c"
-    }
+    },
+
+    // added settings
+    "python.envFile": "${workspaceFolder}/.env"
 }
