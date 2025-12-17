@@ -1,4 +1,4 @@
-// FDM C Wrapper to be compiled into a shared library (libfdm.so)
+// Plant (FDM + Sensor Models) C Wrapper to be compiled into a shared library (libplant.so)
 
 #include "UAV_Dynamics.h"
 #include <stdio.h>
@@ -6,7 +6,6 @@
 // --- i/o structure for fdm ---
 typedef struct {
     float motor_commands[4]; // 4 rotors 1, 2, 3, 4 normalized
-    //float delta_time;        Time step for the FDM integration
 } FDM_Input;
 
 typedef struct {
@@ -30,7 +29,7 @@ typedef struct {
     double gnd_speed;
     double course_deg;
 
-} FDM_Output;
+} PLANT_Output;
 
 // Entry points and globals
 extern void UAV_Dynamics_initialize(void);
@@ -39,9 +38,9 @@ extern ExtU_UAV_Dynamics_T UAV_Dynamics_U;
 extern ExtY_UAV_Dynamics_T UAV_Dynamics_Y;
 
 //calls the Simulink-generated init function
-void fdm_initialize(void) 
+void plant_initialize(void) 
 {
-    printf ("[libfdm] fdm_initialize() called\n");
+    printf ("[libplant] plant_initialize() called\n");
     // setting it to zero if its not already zero
     memset(&UAV_Dynamics_U, 0, sizeof(UAV_Dynamics_U));
     memset(&UAV_Dynamics_Y, 0, sizeof(UAV_Dynamics_Y));
@@ -49,8 +48,8 @@ void fdm_initialize(void)
     UAV_Dynamics_initialize();
 }
 
-// transfer simulink i/o (UAV_DYNAMICS_U/Y) to FDM_Input/Output)
-void fdm_step(const FDM_Input* in, FDM_Output* out)
+// transfer simulink i/o (UAV_DYNAMICS_U/Y) to plant /Output)
+void fdm_step(const FDM_Input* in, PLANT_Output* out)
 {
     // Inputs → model
     for (int i = 0; i < 4; ++i) {
