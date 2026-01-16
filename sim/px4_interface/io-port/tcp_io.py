@@ -1,28 +1,24 @@
 import socket, errno
 
-DEFAULT_TIMEOUT_MS = 1000 # TODO make a way to calculate appropriate timeout
+DEFAULT_TIMEOUT_MS = 3000 
 
-class Client: #simulator side
-    def __init__(self, host, port, timeout_ms=DEFAULT_TIMEOUT_MS):
-        self.host = host
-        self.port = port
-        self.timeout_ms = timeout_ms
+class Simclient: 
 
-    def open_socket(self):
+    def connect_tcp_socket(self,host,port, timeout_ms=DEFAULT_TIMEOUT_MS):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # (address family, socket type)
         try:
-            s.settimeout(self.timeout_ms / 1000.0) # if connection did not happen witin a sec produce error
-            s.connect((self.host, self.port))
+            s.settimeout(timeout_ms / 1000.0) 
+            s.connect((host, port))
             self.s = s
-        except Exception:
+        except Exception: # if connection did not happen witin 3 seconds produce error
             try: s.close()
             except Exception: pass
             raise
 
-    def write_socket(self,data):
+    def write_to_socket(self,data):
         self.s.sendall(data)
 
-    def read_socket(self, nbyte=8192):  # 8k size of info
+    def read_from_socket(self, nbyte=8192):  # 8k size of info
         return self.s.recv(nbyte)
 
     def close_socket(self):
@@ -31,21 +27,17 @@ class Client: #simulator side
         try: self.s.close()
         except OSError: pass
 
-class Server:
+class SimServer:
     """
     Backlog used to provide a list of client waiting for being accepted during the listening procedure. 
     """
-    def __init__(self, host, port, backlog=5):
-        self.host = host
-        self.port = port
-        self.backlog = backlog
 
-    def listener_socket(self):
+    def listener_socket(self, host, port, backlog):
         ls = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             ls.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            ls.bind((self.host, self.port))
-            ls.listen(self.backlog)
+            ls.bind((host, port))
+            ls.listen(backlog)
             self.listener = ls
         except Exception:
             try: ls.close()

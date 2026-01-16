@@ -45,7 +45,7 @@ extern X_UAV_Dynamics_T UAV_Dynamics_X;
 //calls the Simulink-generated init function
 void plant_initialize(void) 
 {
-    printf ("[libplant] plant_initialize() called\n");
+    printf ("[libplant] plant model initialized..\n");
     // setting it to zero if its not already zero
     memset(&UAV_Dynamics_U, 0, sizeof(UAV_Dynamics_U));
     memset(&UAV_Dynamics_Y, 0, sizeof(UAV_Dynamics_Y));

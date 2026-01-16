@@ -34,13 +34,9 @@ class PX4InterfaceSILModel():
         self.plant_output = self.plant_wrapper.plant_out
         self.last_actuator_msg = [0.0, 0,0, 0.0, 0.0]  
 
-    def load_fdm_library(self):
-        """Loads the FDM library - either C or Python."""
-        self.plant_wrapper.setup_plant()  
-
     def set_param(self, name, value, param_type):
         """
-        Generic MAVLink PARAM_SET to set PX4 parameters from Python
+        Generic MAVLink PARAM_SET to configure PX4 parameters from Python
         """
         if not self.master:return
         self.master.mav.param_set_send(
@@ -53,16 +49,14 @@ class PX4InterfaceSILModel():
 
     def configure_px4_logging(self):
         """
-        Configure PX4 logging for SIL from Python
+        Configure PX4 logging for SIL mode and access after mission completetion in QGC.
         """
-        print("[PX4] Configuring logging parameters...")
-
         self.set_param("SDLOG_MODE",      2, mavutil.mavlink.MAV_PARAM_TYPE_INT32)
         self.set_param("SDLOG_BACKEND",   1, mavutil.mavlink.MAV_PARAM_TYPE_INT32)
         self.set_param("SDLOG_PROFILE", 131, mavutil.mavlink.MAV_PARAM_TYPE_INT32)
         self.set_param("SDLOG_MISSION",   1, mavutil.mavlink.MAV_PARAM_TYPE_INT32)
         self.set_param("SDLOG_DIRS_MAX", 10, mavutil.mavlink.MAV_PARAM_TYPE_INT32)
-        print("[PX4] Logging configured")
+        print("[PX4] Logging configured..")
 
     def initialize_connection(self, sys_id=SIM_SYS_ID, comp_id=SIM_COMP_ID):
         """Initiate the MAVLink TCP connection."""
@@ -70,10 +64,9 @@ class PX4InterfaceSILModel():
                                                  source_system=sys_id, source_component=comp_id, 
                                                  input=True, autoreconnect=True, robust_parsing=True)
         self.master.wait_heartbeat()
-        self.plant_wrapper.setup_plant()
+        self.plant_wrapper.setup_plant() # Initialize (load) the FDM and clear previous runtimes
         self.configure_px4_logging()
         return self.master
-    
     
     def close_comms(self):
         """Closes the MAVLink connection - for safety purposes."""
