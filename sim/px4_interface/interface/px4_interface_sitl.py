@@ -1,15 +1,13 @@
-import sys, os, time, subprocess
+import time
 import numpy as np
 from pymavlink import mavutil
+from interface.plant.plant_wrapper.c_wrapper import PlantWrapper
 
-sys.path.insert(0, os.path.dirname(__file__))
-from plant_wrapper.c_wrapper import PlantWrapper
+# note: only one language wrapper can be active at a time.
+# TODO: if using python wrapper uncomment the line bellow and comment the c wrapper path. 
+#from plant-wrapper.python_wrapper import PlantWrapper
 
-
-# if using python wrapper:
-#from plant_wrapper.python_wrapper import PlantWrapper
-
-# --- Config ---
+# Config 
 SIM_LOOP_RATE_HZ = 100.0 # Simulation loop frequency
 DT_SIM = 1.0 / SIM_LOOP_RATE_HZ
 DT_GPS = 1.0/2.0
@@ -18,8 +16,7 @@ SIM_SYS_ID = 2 # Simulator MAVLink System ID
 SIM_COMP_ID = 222
 
 
-
-# --- Model ---
+# Model 
 class PX4InterfaceSILModel():
     """Run the simulation in lockstep with PX4 SITL using MAVLink HIL messages."""
     def __init__(self):
@@ -100,10 +97,10 @@ class PX4InterfaceSILModel():
         if actuator_msg is None:
             cmnd_stored = self.last_actuator_msg
         else:
-            cmnd_stored = [float(actuator_msg.controls[i]) for i in range(4)]
+            cmnd_stored = [float(actuator_msg.controls[i]) for i in range(len(self.fdm_input.motor_commands))]
             self.last_actuator_msg = cmnd_stored
 
-        for i in range(4): self.fdm_input.motor_commands [i] = cmnd_stored[i]
+        for i in range(len(self.fdm_input.motor_commands)): self.fdm_input.motor_commands [i] = cmnd_stored[i]
         return self.fdm_input
     
     def fdm_step(self):

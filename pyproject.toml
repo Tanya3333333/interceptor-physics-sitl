@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "uviccfar-simulationtools"
+version = "0.0.0"
+requires-python = ">=3.10"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sim*"]
+
+[tool.setuptools.package-data]
+"interface.plant.plant_shared_lib" = ["*.so", "*.dll"]
