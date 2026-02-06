@@ -8,10 +8,10 @@ from pathlib import Path
 
 
 LOG_FILES = [
-    "/home/sean/Desktop/timestamp_fdm_log.csv",
-    "/home/sean/Desktop/timestamp_hil_sensor_log.csv",
-    "/home/sean/Desktop/timestamp_hil_gps_log.csv",
-    "/home/sean/Desktop/execution_time_log.csv"
+    "/home/tanya/Desktop/timestamp_fdm_log.csv",
+    "/home/tanya/Desktop/timestamp_hil_sensor_log.csv",
+    "/home/tanya/Desktop/timestamp_hil_gps_log.csv",
+    "/home/tanya/Desktop/execution_time_log.csv"
 ]
 
 for log_file in LOG_FILES:

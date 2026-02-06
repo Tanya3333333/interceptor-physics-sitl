@@ -8,11 +8,11 @@ from pathlib import Path
 
 
 LOG_FILES = [
-    "/home/sean/Desktop/timestamp_fdm_log.txt",
-    "/home/sean/Desktop/timestamp_hil_sensor_log.txt",
-    "/home/sean/Desktop/timestamp_hil_state_q_log.txt",
-    "/home/sean/Desktop/timestamp_hil_gps_log.txt",
-    "/home/sean/Desktop/timestamp_heartbeat_sent_log.txt"
+    "/home/tanya/0101-UVicCfAR_SimulationTools/sim/px4_interface/analysis/logger/fdm_log.txt",
+    "/home/tanya/0101-UVicCfAR_SimulationTools/sim/px4_interface/analysis/logger/sensor_log.txt",
+    "/home/tanya/0101-UVicCfAR_SimulationTools/sim/px4_interface/analysis/logger/state_q_log.txt",
+    "/home/tanya/0101-UVicCfAR_SimulationTools/sim/px4_interface/analysis/logger/gps_log.txt",
+    "/home/tanya/0101-UVicCfAR_SimulationTools/sim/px4_interface/analysis/logger/heartbeat_log.txt"
 ]
 
 dataset=[]

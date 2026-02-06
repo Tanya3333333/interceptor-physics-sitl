@@ -3,18 +3,15 @@ Release date: Oct 2025
 
 About the "sim/px4-interface" folder: 
 
-- "sim/px4-interface/interface" folder includes the core models including: 
-    . The main SITL model to communicate with PX4 Autopilot, initia
-    
-    te FDM and Sensor models, unpack commands from PX4 and pack data back to PX4 
+- "sim/px4-interface/interface" folder includes the core functionanilities including: 
+    . The main SITL model to communicate with PX4 Autopilot, initiate FDM and Sensor models, unpack commands from PX4 and pack data back to PX4 
     . Plant models (FDM and Sensor Models) of different aircrafts in different programming languages (the plant wrappers are being used to translate different languages to the main SITL model)
 
 - "sim/px4-interface/kernel" folder manages the simulation - including: 
     . "scheduler" folder steps the FDM, and send massages all with specific frequencies. 
-    . To run this simulator, use this command line: python -m kernel.scheduler.scheduler_busy_wait 
-            (scheduler_busy_wait is the optimal scheduler to use for more determinisitc reactions. However the remaining schedulers also work, but with more jitter and was developed for RT evaluation of SITL testing) 
+    . To run this simulator, use this command line: python -m kernel.scheduler.<scheduler_name>
     . TO run logger: ~/home/0101-UVicCfAR_SimulationTools/sim/px4_interface/analysis/logger$ --(run command)--> python3 -m logger_module_test
-        --> only scheduler_initial_test.py and scheduler_ext_log.py uses the logger module
+        --> only scheduler_ext_log.py uses the logger module that has to be executed in different processes
 
 -  "sim/px4-interface/samples" include:
     . Example of a simple client/server model (for networking communication)
@@ -23,10 +20,22 @@ About the "sim/px4-interface" folder:
         For more info, follow this website: https://www.mathworks.com/help/uav/px4/ref/px4-stock-hitl-simulink-example.html
 
 -  "sim/px4-interface/analysis" include:
-    . logger module that needs to run before running the scheduler (if the scheduler is using multiprocess loggin -> scheduler_ext_log.py)
-    . jitter-analysis has a script to analyse the files (to run use command: python analysis/jitter-analysis/scheduler_timestamp-analysis.py)
-        To use this, make sure to edit the files paths and "pip install" the scipy and the matplotlib libraries.
+    . logger module that needs to run before running the scheduler (if the scheduler is using multi-process loggin -> scheduler_ext_log.py).
+    . jitter-analysis has a script to analyse the files (to run use command: python analysis/jitter-analysis/scheduler1_timestamp-analysis.py).
+        To use this, make sure to edit the files (csv txt files) paths and "pip install" the scipy and the matplotlib libraries.
+        - if data log written in txt -> use scheduler1_timestamp-analysis.py
+        - if data log written in csv -> use scheduler2_timestamp-analysis.py
 
+Recommendation:
+- Create a .venv and activate it when running scripts:
+    For win: 
+        "py -3 -m venv .venv"
+        ".\.venv\Scripts\Activate.ps1" -> if using powershell
+    For Ubuntu: 
+        "python3 -m venv .venv"
+        "source .venv/bin/activate"
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 How to use any Plant model (FDM Model and sensor models) within Simulator framework: 
 
 Section 1. If the plant model is available in MATLAB-Simulink: 
