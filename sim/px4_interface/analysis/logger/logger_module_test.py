@@ -1,4 +1,4 @@
-from logger_module import ServerLogger
+from analysis.logger.logger_module import ServerLogger
 import unittest
 
 class test_loggger (unittest.TestCase):  
