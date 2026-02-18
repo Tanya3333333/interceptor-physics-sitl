@@ -1,7 +1,7 @@
 import time
 import numpy as np
 from pymavlink import mavutil
-from interface.plant.plant_wrapper.c_wrapper import PlantWrapper
+from sim.px4_interface.interface.plant.plant_wrapper.c_wrapper import PlantWrapper
 
 # note: only one language wrapper can be active at a time.
 # TODO: if using python wrapper uncomment the line bellow and comment the c wrapper path. 
@@ -209,3 +209,4 @@ class PX4InterfaceSILModel():
             int((self.plant_output.acc[1]/ 9.80665) * 1000),
             int((self.plant_output.acc[2]/ 9.80665) * 1000)
         )
+        print (self.plant_output.attitude_quaternion[0], self.plant_output.attitude_quaternion[1])

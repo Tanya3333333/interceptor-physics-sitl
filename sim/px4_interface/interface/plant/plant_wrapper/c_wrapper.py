@@ -2,7 +2,8 @@ from ctypes import *
 from importlib.resources import files
 import sys
 
-lib_dir = files("interface.plant.plant_shared_lib")
+lib_dir = files("sim.px4_interface.interface.plant.plant_shared_lib")
+
 lib_name = "libPlant.dll" if sys.platform == "win32" else "libPlant.so"
 libPlant_path = (str(lib_dir / lib_name))
 
