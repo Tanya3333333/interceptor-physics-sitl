@@ -1,6 +1,8 @@
 import os, time, csv, math
 from datetime import datetime
-from interface.px4_interface_sitl import PX4InterfaceSILModel
+from sim.px4_interface.interface.px4_interface_sitl import PX4InterfaceSILModel
+from sim.px4_interface.interface.ground_station import GroundStation
+from sim.visualizer.interface.client import VisualSimState
 
 # Logging files 
 desktop = os.path.expanduser("~/Desktop")
@@ -37,14 +39,22 @@ class SimSITL:
         self.fdm_t_log    = []
         self.sensor_t_log = []
         self.gps_t_log    = []
+        self.home_position = [48.6508200, -123.4174899, 30.0]
         
         
-        # Initialize PX4 and FDM
+        # Initialize PX4 and FDM 
         self.px4 = PX4InterfaceSILModel()
-        self.px4.initialize_connection() # connect to px4 and initialize plant
-        self.sim_start = datetime.now()
+        self.px4.initialize_connection()                # connect to px4 and initialize plant
+        self.px4.set_home_position(self.home_position)
+        
+        # initialize visualizer
+        
+        self.visualizer = VisualSimState()
+        self.visualizer.send_home_position(self.home_position)
+
         
         # Cycle count
+        self.sim_start = datetime.now()
         self.cycle   = 0
 
         # Set flag if sync'd to each FDM step
@@ -65,7 +75,7 @@ class SimSITL:
         self.px4.actuator_to_fdm_input(msg)
 
         # FDM STEP
-        self.fdm_t_log.append(time.perf_counter()) # Record time
+        self.fdm_t_log.append(time.perf_counter())  # Record time
         self.px4.fdm_step()
 
         t = int(time.perf_counter() * 1e6)
@@ -97,8 +107,8 @@ class SimSITL:
 
     def run_sim(self):    
         # Init timing vars
-        next_t = time.perf_counter()
-
+        next_t = time.perf_counter()        
+        
         try:
             print("Start Loop...")
             while True:     
@@ -109,9 +119,14 @@ class SimSITL:
                     self.precise_sleep(next_t - now)
 
                 start = time.perf_counter()
+                
                 ## Start FDM Loop ##
                 self.step_plant()
+    
+                #send plant states to visualizer
+                self.visualizer.state_collection(self.px4.plant_output) 
                 ## End Loop ##
+                
                 end = time.perf_counter()
 
                 # Check timing of last loop

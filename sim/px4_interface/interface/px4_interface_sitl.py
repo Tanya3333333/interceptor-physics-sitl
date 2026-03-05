@@ -30,7 +30,8 @@ class PX4InterfaceSILModel():
         self.fdm_input = self.plant_wrapper.fdm_in
         self.plant_output = self.plant_wrapper.plant_out
         self.last_actuator_msg = [0.0, 0,0, 0.0, 0.0]  
-
+        
+    
     def set_param(self, name, value, param_type):
         """
         Generic MAVLink PARAM_SET to configure PX4 parameters from Python
@@ -43,6 +44,7 @@ class PX4InterfaceSILModel():
             float(value),
             param_type)    
         time.sleep(0.1) # small delay so PX4 applies it
+
 
     def configure_px4_logging(self):
         """
@@ -86,12 +88,35 @@ class PX4InterfaceSILModel():
             0,
             mavutil.mavlink.MAV_STATE_ACTIVE
         )
+        
+        
+    def set_home_position(self, home_position):
+        """
+        set the origin/home
+        id 179 in mavlink common website
+        """
+        if not self.master: return None
+        
+        self.master.mav.command_long_send(
+            self.master.target_system,
+            self.master.target_component,
+            mavutil.mavlink.MAV_CMD_DO_SET_HOME,
+            0,                                      # confirmation
+            0,                                      # allows setting location
+            0,0,0,                                  # unused param 2->4
+            home_position[0],                       #lat0
+            home_position[1],                       #lon0
+            home_position[2]                        #alt0
+        )
+        print ("home position is set")
+            
     
     def recv_actuator_controls(self):
         """Receives the HIL_ACTUATOR_CONTROLS message from PX4."""
         if not self.master: return None
         return self.master.recv_match(type="HIL_ACTUATOR_CONTROLS", blocking=False) 
-
+    
+        
     def actuator_to_fdm_input(self, actuator_msg):
         """Converts MAVLink ACTUATOR_CONTROLS to FDM_Input struct and normalized motor commands"""
         if actuator_msg is None:
@@ -209,4 +234,3 @@ class PX4InterfaceSILModel():
             int((self.plant_output.acc[1]/ 9.80665) * 1000),
             int((self.plant_output.acc[2]/ 9.80665) * 1000)
         )
-        print (self.plant_output.attitude_quaternion[0], self.plant_output.attitude_quaternion[1])
