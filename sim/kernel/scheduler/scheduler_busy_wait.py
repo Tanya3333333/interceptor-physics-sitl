@@ -1,7 +1,6 @@
 import os, time, csv, math
 from datetime import datetime
 from sim.px4_interface.interface.px4_interface_sitl import PX4InterfaceSILModel
-from sim.px4_interface.interface.ground_station import GroundStation
 from sim.visualizer.interface.client import VisualSimState
 
 # Logging files 
@@ -19,15 +18,17 @@ LOG_PATH_EXEC           = os.path.join(desktop, "execution_time_log.csv")
 # FDM rate sets max frequency, all step times must be integer multiples of DT_FDM.
 FDM_RATE_HZ         = 100.0
 SENSOR_RATE_HZ      = 100.0
-STATE_QUAT_RATE_HZ  = 100.0
+STATE_QUAT_RATE_HZ  = 50.0
 GPS_RATE_HZ         = 5.0
 HEARTBEAT_RATE_HZ   = 1.0
+VISUALIZER_RATE_HZ  = FDM_RATE_HZ                        # should match FDM
 
 DT_FDM              = 1.0 / FDM_RATE_HZ         
 DT_SENSOR           = 1.0 / SENSOR_RATE_HZ   
 DT_STATE_QUAT       = 1.0 / STATE_QUAT_RATE_HZ 
 DT_GPS              = 1.0 / GPS_RATE_HZ         
 DT_HEARTBEAT        = 1.0 / HEARTBEAT_RATE_HZ
+DT_VISUALIZER       = 1.0 / VISUALIZER_RATE_HZ
 
 class SimSITL:  
     """
@@ -35,11 +36,13 @@ class SimSITL:
     """
     def __init__(self):
         # Lists to buffer monitoring data from test run
-        self.exec_t_log   = []
-        self.fdm_t_log    = []
-        self.sensor_t_log = []
-        self.gps_t_log    = []
-        self.home_position = [48.6508200, -123.4174899, 30.0]
+        self.exec_t_log             = []
+        self.fdm_t_log              = []
+        self.sensor_t_log           = []
+        self.gps_t_log              = []
+        self.visualizer_send_t_log  = []
+        
+        self.home_position          = [45.695293, -118.844363, 30.0]    # [48.6508200, -123.4174899, 30.0]  [45.695293, -118.844363, 30.0] 
         
         
         # Initialize PX4 and FDM 
@@ -63,6 +66,10 @@ class SimSITL:
 
         if(math.isclose(STATE_QUAT_RATE_HZ/FDM_RATE_HZ, 1)):self.syncStateToFDM = 1, print("HIL_STATE_QUATERNION synchronized to FDM") 
         else:self.syncStateToFDM = 0
+        
+        if(math.isclose(VISUALIZER_RATE_HZ/FDM_RATE_HZ, 1)):self.syncVisuToFDM = 1, print("VISUALIZER synchronized to FDM") 
+        else:self.syncVisuToFDM = 0
+
 
     def precise_sleep(self, seconds):
         start_time = time.perf_counter()
@@ -80,20 +87,20 @@ class SimSITL:
 
         t = int(time.perf_counter() * 1e6)
 
+        # HIL_SENSOR
+        if(self.syncImuToFDM):
+            self.sensor_t_log.append(time.perf_counter())
+            self.px4.send_hil_sensor(t) # If synced, call every loop 
+
+        elif(self.cycle % (FDM_RATE_HZ // SENSOR_RATE_HZ) == 0):
+            self.sensor_t_log.append(time.perf_counter())
+            self.px4.send_hil_sensor(t) # Else send with decimation
+            
         # HIL_STATE_QUATERNION
         if(self.syncStateToFDM):
             self.px4.send_hil_state_quaternion(t) # If synced, call every loop 
         elif(self.cycle % (FDM_RATE_HZ // STATE_QUAT_RATE_HZ) == 0):
             self.px4.send_hil_state_quaternion(t) # Else send with decimation
-
-        # HIL_SENSOR
-        if(self.syncImuToFDM):
-            self.sensor_t_log.append(time.perf_counter())
-            self.px4.send_hil_sensor(t) # If synced, call every loop 
-        
-        elif(self.cycle % (FDM_RATE_HZ // SENSOR_RATE_HZ) == 0):
-            self.sensor_t_log.append(time.perf_counter())
-            self.px4.send_hil_sensor(t) # Else send with decimation
 
         # HIL_GPS
         if(self.cycle % (FDM_RATE_HZ // GPS_RATE_HZ) == 0):
@@ -103,7 +110,16 @@ class SimSITL:
         # HEARTBEAT
         if(self.cycle % (FDM_RATE_HZ // HEARTBEAT_RATE_HZ) == 0):
             self.px4.send_heartbeat()
-        pass
+        
+        # VISUALIZER
+        if(self.syncVisuToFDM):
+            self.visualizer_send_t_log.append(time.perf_counter())
+            self.visualizer.state_collection(self.px4.plant_output) #send plant states to visualizer
+
+        elif(self.cycle % (FDM_RATE_HZ // VISUALIZER_RATE_HZ) == 0):
+            self.visualizer_send_t_log.append(time.perf_counter())
+            self.visualizer.state_collection(self.px4.plant_output) #send plant states to visualizer with deciments
+        
 
     def run_sim(self):    
         # Init timing vars
@@ -120,13 +136,8 @@ class SimSITL:
 
                 start = time.perf_counter()
                 
-                ## Start FDM Loop ##
                 self.step_plant()
-    
-                #send plant states to visualizer
-                self.visualizer.state_collection(self.px4.plant_output) 
-                ## End Loop ##
-                
+
                 end = time.perf_counter()
 
                 # Check timing of last loop
@@ -153,6 +164,7 @@ class SimSITL:
             self.writeListToCsv(self.exec_t_log, "Execution Time", LOG_PATH_EXEC)
             self.writeListToCsv(self.sensor_t_log, "Sensor Timestamp", LOG_PATH_SENSOR)
             self.writeListToCsv(self.gps_t_log, "GPS Timestamp", LOG_PATH_GPS)
+            self.px4.close_comms()
     
     def writeListToCsv(self, dataList, header, fileDir):
         with open(fileDir, 'w', newline='') as file:

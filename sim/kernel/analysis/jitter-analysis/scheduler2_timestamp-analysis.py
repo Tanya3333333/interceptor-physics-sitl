@@ -5,24 +5,29 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 from pathlib import Path
-
+desktop = Path.home() / "Desktop"
 
 LOG_FILES = [
-    "/home/tanya/0101-UVicCfAR_SimulationTools/sim/px4_interface/analysis/logger/fdm_log.txt",
-    "/home/tanya/0101-UVicCfAR_SimulationTools/sim/px4_interface/analysis/logger/sensor_log.txt",
-    "/home/tanya/0101-UVicCfAR_SimulationTools/sim/px4_interface/analysis/logger/state_q_log.txt",
-    "/home/tanya/0101-UVicCfAR_SimulationTools/sim/px4_interface/analysis/logger/gps_log.txt",
-    "/home/tanya/0101-UVicCfAR_SimulationTools/sim/px4_interface/analysis/logger/heartbeat_log.txt"
+    desktop / "timestamp_fdm_log.csv",
+    desktop / "timestamp_hil_sensor_log.csv",
+    desktop / "timestamp_hil_gps_log.csv",
+    desktop / "execution_time_log.csv"
 ]
 
-dataset=[]
-
-
 for log_file in LOG_FILES:
+    dataset=[]
     file = open(log_file, 'r')
+    next(file)  # skip header line
+
+    prev = None 
     for line in file:
-        dt = float(line.split(":")[-1].strip())
-        dataset.append(dt)
+        t = float(line.split(',')[0])
+        if prev is not None:
+            dataset.append(t - prev)
+
+        prev = t
+    file.close()
+    dataset = np.array(dataset)
 
     #stats
     mu = np.mean(dataset)
@@ -31,7 +36,7 @@ for log_file in LOG_FILES:
     dmax = np.max(dataset)
     N = len(dataset)
     var = np.var(dataset)
-    
+
     # summery 
     print("\n-----------------------------------")
     print(log_file, ": ")
@@ -41,19 +46,6 @@ for log_file in LOG_FILES:
     print(f"Mean Δt: {mu:.6f} s")
     print(f"Std Dev: {sigma:.6f} s")
     print(f"Variance: {var:.14f} s")
-
-    # Gaussian
-    x = np.linspace(dmin, dmax, 300)
-    gaussian = (1/(sigma*np.sqrt(2*np.pi))) * np.exp(-(x-mu)**2/(2*sigma**2))
-    plt.figure(figsize=(7,5))
-    plt.hist(dataset, bins=50, density=True, alpha=0.6, label="Histogram")
-    plt.plot(x, gaussian, linewidth=2, label="Gaussian Fit")
-    plt.title("Gaussian Distribution")
-    plt.xlabel("Δt (seconds)")
-    plt.ylabel("Probability Density")
-    plt.legend()
-    plt.grid(alpha=0.3)
-    plt.show()
 
     # data at each sample index (dt at each iteration)
     itera = 0
@@ -71,5 +63,3 @@ for log_file in LOG_FILES:
 
     # reset for next for loop iteration
     num_samples.clear()
-    dataset.clear()
-    

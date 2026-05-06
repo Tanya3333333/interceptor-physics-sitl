@@ -34,5 +34,17 @@ sim
              interface
                       |
                       client
-                      server 
+
+    AI_modules
+              | 
+              Detection
+              Track
+              GNC
+    kernel
+         |
+         scheduler
+                  |
+                  scheduler_busy_wait.py    -> the scheduler that runs the whole repo
+                  draft_other_schedulers    -> foldaer contains other scheduler logic flow
+
                         

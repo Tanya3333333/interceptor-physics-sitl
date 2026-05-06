@@ -56,6 +56,10 @@ class PX4InterfaceSILModel():
         self.set_param("SDLOG_MISSION",   1, mavutil.mavlink.MAV_PARAM_TYPE_INT32)
         self.set_param("SDLOG_DIRS_MAX", 10, mavutil.mavlink.MAV_PARAM_TYPE_INT32)
         print("[PX4] Logging configured..")
+        
+    def configure_px4_dds(self):
+        self.set_param("UXRCE_DDS_DOM_ID", 24, mavutil.mavlink.MAV_PARAM_TYPE_INT32)
+        print("[PX4-ROS] established interaction..")
 
     def initialize_connection(self, sys_id=SIM_SYS_ID, comp_id=SIM_COMP_ID):
         """Initiate the MAVLink TCP connection."""
@@ -63,6 +67,7 @@ class PX4InterfaceSILModel():
                                                  source_system=sys_id, source_component=comp_id, 
                                                  input=True, autoreconnect=True, robust_parsing=True)
         self.master.wait_heartbeat()
+        self.configure_px4_dds()
         self.plant_wrapper.setup_plant() # Initialize (load) the FDM and clear previous runtimes
         self.configure_px4_logging()
         return self.master
@@ -97,6 +102,10 @@ class PX4InterfaceSILModel():
         """
         if not self.master: return None
         
+        lat0 = home_position[0] 
+        lon0 = home_position[1] 
+        alt0 = home_position[2]
+        
         self.master.mav.command_long_send(
             self.master.target_system,
             self.master.target_component,
@@ -104,12 +113,19 @@ class PX4InterfaceSILModel():
             0,                                      # confirmation
             0,                                      # allows setting location
             0,0,0,                                  # unused param 2->4
-            home_position[0],                       #lat0
-            home_position[1],                       #lon0
-            home_position[2]                        #alt0
-        )
-        print ("home position is set")
-            
+            lat0, lon0, alt0)
+        
+        # Wait a bit for ACK 
+
+        t0 = time.time() 
+        while time.time() - t0 < 2.0: 
+
+            msg = self.master.recv_match(type='COMMAND_ACK', blocking=True, timeout=0.2) 
+            if msg and msg.command == mavutil.mavlink.MAV_CMD_DO_SET_HOME:
+                print(f"ACK result = {msg.result}") 
+
+        print("No COMMAND_ACK received for MAV_CMD_DO_SET_HOME") 
+                    
     
     def recv_actuator_controls(self):
         """Receives the HIL_ACTUATOR_CONTROLS message from PX4."""
