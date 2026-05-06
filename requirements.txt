@@ -1,0 +1,9 @@
+numpy
+pandas
+matplotlib
+scipy
+pymavlink
+pyserial
+pyulog
+psutil
+PyYAML

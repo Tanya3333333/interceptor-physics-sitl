@@ -1,5 +1,4 @@
 import socket, time, struct
-import pymap3d
 
 class VisualSimState:
     """

@@ -12,7 +12,7 @@ package-dir = {"" = "."}
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["sim*"]
+include = ["sim*", "kernel*", "px4_interface*", "visualizer*"]
 
 [tool.setuptools.package-data]
 "interface.plant.plant_shared_lib" = ["*.so", "*.dll"]
